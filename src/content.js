@@ -9,7 +9,26 @@
   // ---------------------------------------------------------------- selectors
   // Discord's class names are hashed per build, so match on the stable bits:
   // element ids for messages, and class *prefixes* for embeds.
-  var MESSAGE_CONTENT = 'div[id^="message-content-"]';
+  var MESSAGE_CONTENT = 'div[id^="message-content-"], div[class*="messageContent"]';
+
+  /* The editor itself, then the box around it. Discord has moved the composer
+     in and out of a <form> over the years, so neither is assumed. */
+  var EDITOR = [
+    '[data-slate-editor="true"][role="textbox"]',
+    'div[role="textbox"][contenteditable="true"]',
+    'div[role="textbox"]'
+  ].join(',');
+
+  function findEditor() {
+    return document.querySelector(EDITOR);
+  }
+
+  function composerBox(editor) {
+    return editor.closest('form') ||
+           editor.closest('[class*="channelTextArea"]') ||
+           editor.closest('[class*="textArea"]') ||
+           editor.parentElement;
+  }
   var EMBED_PARTS = [
     '[class*="embedTitle"]',
     '[class*="embedDescription"]',
@@ -273,8 +292,7 @@
     composerButton.addEventListener('mousedown', function (e) {
       e.preventDefault();
       e.stopPropagation();
-      var box = document.querySelector('div[role="textbox"][data-slate-editor="true"]') ||
-                document.querySelector('form div[role="textbox"]');
+      var box = findEditor();
       if (box) translateAndSend(box);
     });
 
@@ -321,17 +339,25 @@
   function placeComposerButton() {
     if (!composerButton) return;
 
-    var form = document.querySelector('form div[role="textbox"]');
-    form = form && (form.closest('form') || form.parentElement);
+    var editor = findEditor();
+    var form = editor && composerBox(editor);
     if (!form) { composerButton.style.display = 'none'; return; }
 
     var box = form.getBoundingClientRect();
-    if (!box.width) { composerButton.style.display = 'none'; return; }
+    if (!box.width || !box.height) { composerButton.style.display = 'none'; return; }
 
     // Line up with the row of gift and emoji buttons when there is one, so the
-    // three read as one set rather than ours floating loose.
-    var neighbour = form.querySelector('[class*="buttons"] button, [class*="buttons"] [role="button"]');
-    var right = neighbour ? neighbour.getBoundingClientRect().left - 4 : box.right - 12;
+    // three read as one set rather than ours floating loose. Their container is
+    // named differently across builds, so the leftmost button in the composer
+    // that sits to the right of the text is used instead of a class name.
+    var right = box.right - 10;
+    var buttons = form.querySelectorAll('button, [role="button"]');
+    for (var i = 0; i < buttons.length; i++) {
+      var r = buttons[i].getBoundingClientRect();
+      if (r.width && r.left > box.left + box.width / 2 && r.left - 6 < right) {
+        right = r.left - 6;
+      }
+    }
 
     composerButton.style.display = 'block';
     composerButton.style.left = Math.round(right - 34) + 'px';
@@ -353,10 +379,22 @@
     if (settings.mode !== 'tap') hideMessageButton();
   }
 
-  // Anything that moves the page moves the buttons with it.
-  window.addEventListener('scroll', refreshButtons, true);
-  window.addEventListener('resize', refreshButtons);
-  setInterval(refreshButtons, 400);
+  /* Anything that moves the page moves the buttons with it — but measuring on
+     every scroll event is what makes a page feel heavy, so it happens once a
+     frame at most. */
+  var framePending = false;
+  function refreshSoon() {
+    if (framePending) return;
+    framePending = true;
+    requestAnimationFrame(function () {
+      framePending = false;
+      refreshButtons();
+    });
+  }
+
+  window.addEventListener('scroll', refreshSoon, true);
+  window.addEventListener('resize', refreshSoon);
+  setInterval(refreshButtons, 600);
 
   /* Bot commands have to survive byte for byte or they stop working: a slash
      command, or one of the prefixes bots use, followed immediately by a word.
@@ -496,6 +534,7 @@
       return;
     }
     active = next;
+    refreshButtons();
     if (active) {
       observer.observe(document.body, {
         childList: true, subtree: true, characterData: true

@@ -82,7 +82,7 @@ div[role="textbox"][data-dt-busy="1"] {
 .dt-layer {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: 2147483000;   /* above every Discord layer, including modals */
   pointer-events: none;
 }
 

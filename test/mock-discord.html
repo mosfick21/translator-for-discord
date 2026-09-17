@@ -95,7 +95,9 @@
   </li>
 </ol>
 
-<form class="composer">
+<!-- Modern Discord has no <form> around the composer. The button used to be
+     placed only when there was one, so the mock deliberately has none. -->
+<div class="composer channelTextArea_a552a6">
   <div role="textbox" data-slate-editor="true" contenteditable="true"
        class="slateTextArea_a552a6" data-placeholder="Message #general">vai dam koto ekhon</div>
   <div class="buttons_f9f2ca">
@@ -103,7 +105,7 @@
     <button type="button" class="attachButton">GIF</button>
     <button type="button" class="attachButton">emoji</button>
   </div>
-</form>
+</div>
 
 <script>
   // Discord re-renders constantly; this checks the observer survives it.
