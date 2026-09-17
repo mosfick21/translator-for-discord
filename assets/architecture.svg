@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 430" width="1000" height="430" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#22253a"/><stop offset="1" stop-color="#191b2b"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8a93f0"/>
+    </marker>
+    <marker id="arrowBack" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5f6a9e"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="430" rx="16" fill="url(#panel)"/>
+
+  <!-- ─── discord page ─────────────────────────────────────────────── -->
+  <rect x="40" y="96" width="256" height="210" rx="12" fill="#2b2f45" stroke="#5865f2" stroke-width="1.5"/>
+  <text x="64" y="128" fill="#8a93f0" font-size="12" font-weight="700" letter-spacing="1.4">DISCORD PAGE</text>
+  <text x="64" y="160" fill="#f2f3f5" font-size="17" font-weight="600">content.js</text>
+  <text x="64" y="192" fill="#b6bdd4" font-size="14">Watches the message list</text>
+  <text x="64" y="216" fill="#b6bdd4" font-size="14">Rewrites text in place</text>
+  <text x="64" y="240" fill="#b6bdd4" font-size="14">Catches what you type</text>
+  <line x1="64" y1="260" x2="272" y2="260" stroke="#3d4361" stroke-width="1"/>
+  <text x="64" y="284" fill="#f2d16b" font-size="13">Mentions · links · code untouched</text>
+
+  <!-- ─── service worker ───────────────────────────────────────────── -->
+  <rect x="372" y="66" width="256" height="270" rx="12" fill="#2b2f45" stroke="#5865f2" stroke-width="1.5"/>
+  <text x="396" y="98" fill="#8a93f0" font-size="12" font-weight="700" letter-spacing="1.4">SERVICE WORKER</text>
+  <text x="396" y="130" fill="#f2f3f5" font-size="17" font-weight="600">background.js</text>
+  <text x="396" y="164" fill="#b6bdd4" font-size="14">Hold back what must not change</text>
+  <text x="396" y="190" fill="#b6bdd4" font-size="14">Fix chat spellings</text>
+  <text x="396" y="216" fill="#b6bdd4" font-size="14">Translate, then relax the tone</text>
+  <text x="396" y="242" fill="#b6bdd4" font-size="14">Cache and retry</text>
+  <line x1="396" y1="262" x2="604" y2="262" stroke="#3d4361" stroke-width="1"/>
+  <text x="396" y="286" fill="#f2d16b" font-size="13">364k-word dictionary decides</text>
+  <text x="396" y="306" fill="#f2d16b" font-size="13">which words stay as typed</text>
+
+  <!-- ─── backends ─────────────────────────────────────────────────── -->
+  <rect x="704" y="96" width="256" height="210" rx="12" fill="#2b2f45" stroke="#23a55a" stroke-width="1.5"/>
+  <text x="728" y="128" fill="#4ac07c" font-size="12" font-weight="700" letter-spacing="1.4">BACKENDS · NO KEY</text>
+  <text x="728" y="162" fill="#f2f3f5" font-size="15" font-weight="600">Bing</text>
+  <text x="790" y="162" fill="#6d7695" font-size="13">default</text>
+  <text x="728" y="190" fill="#b6bdd4" font-size="15">Google ×2</text>
+  <text x="728" y="218" fill="#b6bdd4" font-size="15">MyMemory</text>
+  <text x="728" y="246" fill="#b6bdd4" font-size="15">LibreTranslate</text>
+  <line x1="728" y1="266" x2="936" y2="266" stroke="#3d4361" stroke-width="1"/>
+  <text x="728" y="290" fill="#4ac07c" font-size="13">One fails, the next answers</text>
+
+  <!-- ─── arrows ───────────────────────────────────────────────────── -->
+  <line x1="300" y1="168" x2="364" y2="168" stroke="#8a93f0" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="332" y="156" fill="#8a93f0" font-size="12" text-anchor="middle">text</text>
+
+  <line x1="364" y1="236" x2="300" y2="236" stroke="#5f6a9e" stroke-width="2" marker-end="url(#arrowBack)"/>
+  <text x="332" y="260" fill="#5f6a9e" font-size="12" text-anchor="middle">translated</text>
+
+  <line x1="632" y1="168" x2="696" y2="168" stroke="#8a93f0" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="696" y1="236" x2="632" y2="236" stroke="#5f6a9e" stroke-width="2" marker-end="url(#arrowBack)"/>
+
+  <!-- ─── caption ──────────────────────────────────────────────────── -->
+  <text x="500" y="386" fill="#8891ad" font-size="14" text-anchor="middle">Both directions run the same path — messages you read, and messages you send.</text>
+</svg>
