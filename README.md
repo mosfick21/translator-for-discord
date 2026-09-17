@@ -210,6 +210,7 @@ src/dictionary.bin      364k words in 356 KB, built by tools/
 src/tone.js             polite register relaxed into everyday speech
 test/                   mock Discord page and a DevTools-driven DOM test
 tools/                  rebuilds the dictionary from its source list
+assets/                 icon source and the script that cuts it to size
 ```
 
 Messages are translated by rewriting individual text nodes rather than replacing
