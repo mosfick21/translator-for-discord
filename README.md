@@ -19,7 +19,7 @@
 | | |
 |---|---|
 | **Setup** | None. No account, no API key |
-| **Backends** | Bing · Google ×2 · MyMemory · LibreTranslate |
+| **Translator** | Bing, with silent fallbacks. No key, no account |
 | **Languages** | 45 to read and write, 17 typeable in Latin letters |
 | **Scope** | All of Discord, one server, or one channel |
 | **Untouched** | Bot commands, links, mentions, emoji, code |
@@ -72,36 +72,21 @@ Chrome · Edge · Brave · Opera. Firefox needs
 
 ## Settings
 
-**Reading**
+Six, and that is the lot.
 
 | | |
 |---|---|
-| Reading | Translate everything, or only when you tap a message |
-| Translate into | 45 languages |
-| Skip same language | Leaves what you can already read |
-| Embeds | Bot embeds and link previews too |
-| Keep internet words | *fomo*, *chill*, *mint* stay in English |
-| Everyday wording | Not the polite written form |
+| **On / off** | Or `Alt+T` |
+| **Reading** | Translate everything, or only the message you point at |
+| **From → Into** | Detect each message, or pin the language the server speaks |
+| **Send as** | What the translate button in the message box sends in |
+| **Where it runs** | Everywhere, one server, or one channel |
 
-**Writing**
-
-| | |
-|---|---|
-| Send as | The language the translate button sends in |
-| Latin letters | Banglish, Hinglish, Arabizi |
-
-
-**Where**
-
-| | |
-|---|---|
-| All of Discord | Every server and DM |
-| This server only | The one open when you chose it |
-| This channel only | That one channel |
-
-`Alt+T` toggles · `Alt+click` a message shows the original
-
----
+Nothing else is a setting, because nothing else has a second right answer.
+Internet words are always kept, the polite written register is always relaxed,
+embeds are always included, a message already in your language is always left
+alone, and text typed in Latin letters is put back into its own script when
+that is what it turns out to be.
 
 ## Languages
 
@@ -135,14 +120,12 @@ Chrome · Edge · Brave · Opera. Firefox needs
 
 </div>
 
-Five backends, no keys. If one fails, the next answers.
-
-| | | |
-|---|---|---|
-| **Bing** | *default* | Reads casual writing the way a person does |
-| **Google** | | Fastest, word for word. Two endpoints, separate limits |
-| **MyMemory** | | Open API, ~5,000 words a day |
-| **LibreTranslate** | | Open source, on a server you run |
+One translator, no key, nothing to sign up for. Bing is the only keyless
+service that reads casual writing the way a person does — Google and MyMemory
+render word for word, DeepL has no Bengali and rate-limits without a key, and
+every public LibreTranslate instance is now gone or key-gated. The others stay
+in the chain so that a Bing outage is not an outage here, but there is nothing
+to choose.
 
 Internals in **[ARCHITECTURE.md](ARCHITECTURE.md)** — pipeline order, dictionary
 format, how React is survived, known limits.

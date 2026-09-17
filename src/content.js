@@ -161,7 +161,7 @@
       pending.delete(original);
       if (!res) return;
       // Already in the target language? Leave the message exactly as it is.
-      if (settings.skipSameLanguage && res.detected === settings.target) {
+      if (res.detected === settings.target) {
         localCache.set(original, null);
         return;
       }
@@ -199,7 +199,7 @@
     translate(joined, settings.target, settings.source).then(function (res) {
       pending.delete(joined);
       if (!res) return;
-      if (settings.skipSameLanguage && res.detected === settings.target) {
+      if (res.detected === settings.target) {
         localCache.set(joined, null);
         return;
       }
@@ -390,10 +390,8 @@
 
     if (scope.matches && scope.matches(MESSAGE_CONTENT)) handleBlock(scope);
 
-    if (settings.translateEmbeds) {
-      var embeds = scope.querySelectorAll(EMBED_PARTS);
-      for (var j = 0; j < embeds.length; j++) handleBlock(embeds[j]);
-    }
+    var embeds = scope.querySelectorAll(EMBED_PARTS);
+    for (var j = 0; j < embeds.length; j++) handleBlock(embeds[j]);
   }
 
   function revertAll() {
@@ -477,12 +475,10 @@
     if (!text || looksLikeCommand(text) || box.dataset.dtBusy === '1') return;
 
     box.dataset.dtBusy = '1';
-    // If the user types their language in Latin letters, it is put back into
-    // its own script before translating — otherwise "vai dam koto ekhon" gets
-    // read as Vietnamese.
-    var romanizeFrom = settings.romanized ? settings.romanizedLang : null;
-
-    translate(text, settings.outgoingTarget, settings.outgoingSource, romanizeFrom)
+    // If this turns out to be the user's own language typed in Latin letters,
+    // it is put back into its own script first — otherwise "vai dam koto ekhon"
+    // reads as Vietnamese. The worker decides whether that applies.
+    translate(text, settings.outgoingTarget, null, settings.target)
       .then(function (res) {
         delete box.dataset.dtBusy;
         var out = res && res.text ? res.text : text;   // on failure, send what was typed
@@ -494,9 +490,6 @@
 
   // ------------------------------------------------------------------- wiring
   function applyState() {
-    // CSS cannot read settings, so mirror the badge preference onto <html>.
-    document.documentElement.setAttribute('data-dt-badge', settings.showBadge ? '1' : '0');
-
     var next = scopeAllows();
     if (next === active) {
       if (active) scheduleScan();

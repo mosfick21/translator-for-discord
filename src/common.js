@@ -1,62 +1,31 @@
-/* Shared constants. Loaded first as a content script, and via <script> in the popup,
-   so everything below lives on the shared isolated-world scope. */
+/* Shared constants. Loaded first as a content script, and via <script> in the
+   popup, so everything below lives on the shared isolated-world scope.
+
+   There are six settings. Everything else the extension does — keeping internet
+   words, relaxing the polite register, putting Latin-typed text back into its
+   own script, which translation service to use — has one right answer, so it is
+   not a setting. */
 
 var DT_DEFAULTS = {
   enabled: true,
+
   // 'auto' translates every message as it arrives.
-  // 'tap'  leaves them alone and puts a button on each one instead, for when
-  //        only the occasional message needs translating.
+  // 'tap'  leaves them as posted and offers a button on the one you point at.
   mode: 'auto',
-  // What you read: 'auto' lets each message be detected on its own, which is
-  // right for a mixed channel. Naming a language is better when you know the
-  // server speaks one and want to stop the detector guessing.
+
+  // What you read. 'auto' detects each message on its own, which is right for a
+  // mixed channel; naming a language stops the detector guessing in a server
+  // that only speaks one.
   source: 'auto',
   target: 'bn',
-  // 'everywhere' | 'server' | 'channel'
-  scope: 'everywhere',
-  // Captured when the user picks 'server' or 'channel' from the popup.
-  anchor: { guildId: null, channelId: null },
-  // Leave a message alone when Google says it is already in the target language.
-  skipSameLanguage: true,
-  // Also translate embed titles/descriptions and forum post previews.
-  translateEmbeds: true,
-  // Show the little "translated" marker under each message.
-  showBadge: true,
-  // Translators answer in the polite written register. This relaxes the result
-  // into how people actually type — only for languages where that can be done
-  // by rule without risking a wrong sentence. See src/tone.js.
-  casual: true,
-  // Leave internet vocabulary alone: fomo, chill, vibe, wagmi, mint, gas.
-  // Every language just says these; translating them reads worse.
-  keepSlang: true,
 
-  // --- Outgoing ---
-  // Enter always sends exactly what you typed. The button in the composer is
-  // what translates, so nothing is ever sent in a language you did not choose
-  // by pressing a key you meant for something else.
-  //
-  // The language you write in. 'auto' works, but naming it is more reliable —
-  // a short message is easy to misdetect.
-  outgoingSource: 'auto',
+  // What the translate button in the message box sends in.
   outgoingTarget: 'en',
-  // Set this when you type your language in Latin letters — Banglish, Hinglish,
-  // Arabizi. The text is put back into its own script before being translated,
-  // because translators read "vai dam koto ekhon" as Vietnamese otherwise.
-  romanized: false,
-  romanizedLang: 'bn',
 
-  // --- How the text actually gets translated ---
-  // Every backend here is keyless: nothing to sign up for, nothing to paste in.
-  // If one is down or rate-limits, the next is tried automatically.
-  // 'bing'     -> reads casual chat and slang properly. The default.
-  // 'google'   -> fastest, but word for word.
-  // 'mymemory' -> open API, roughly 5k words a day per address.
-  // 'libre'    -> a LibreTranslate server you run yourself (see libreUrl).
-  engine: 'bing',
-  // A LibreTranslate instance of your own, e.g. http://localhost:5000.
-  // Blank by default: every public instance is currently offline or asking for
-  // a key, so self-hosting is the only keyless route to it.
-  libreUrl: ''
+  // 'everywhere' | 'server' | 'channel', with the anchor captured from the tab
+  // that was open when the choice was made.
+  scope: 'everywhere',
+  anchor: { guildId: null, channelId: null }
 };
 
 var DT_LANGUAGES = [
@@ -107,7 +76,7 @@ var DT_LANGUAGES = [
   ['el', 'Greek — Ελληνικά']
 ];
 
-/** Pull { guildId, channelId } out of a discord.com URL. @me DMs use "@me" as the guild. */
+/** Pull { guildId, channelId } out of a discord.com URL. @me DMs use "@me". */
 function dtParseLocation(href) {
   var m = /discord\.com\/channels\/([^/?#]+)(?:\/([^/?#]+))?/.exec(href || '');
   if (!m) return { guildId: null, channelId: null };
@@ -121,11 +90,3 @@ function dtLoadSettings() {
     });
   });
 }
-
-/* Languages that Google's transliteration service can put back into their own
-   script. Anything outside this list cannot use the "I type in Latin letters"
-   option. */
-var DT_ROMANIZABLE = [
-  'bn', 'hi', 'ur', 'ta', 'te', 'ml', 'kn', 'mr', 'gu', 'pa',
-  'ne', 'si', 'ar', 'fa', 'he', 'ru', 'el'
-];

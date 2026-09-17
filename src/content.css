@@ -21,7 +21,7 @@
 }
 
 /* The little marker after a translated message. */
-html[data-dt-badge="1"] [data-dt-translated]::after {
+[data-dt-translated]::after {
   content: "translated";
   display: inline-block;
   margin-left: 6px;
@@ -42,7 +42,7 @@ html[data-dt-badge="1"] [data-dt-translated]::after {
   cursor: help;
 }
 
-html[data-dt-badge="1"] [data-dt-translated]:hover::after {
+[data-dt-translated]:hover::after {
   opacity: 1;
 }
 
@@ -62,7 +62,7 @@ html[data-dt-badge="1"] [data-dt-translated]:hover::after {
   color: var(--text-normal, #dbdee1);
 }
 
-html[data-dt-badge="1"] [data-dt-translated].dt-show-original::after {
+[data-dt-translated].dt-show-original::after {
   content: "original";
   font-size: 0.625rem;
 }

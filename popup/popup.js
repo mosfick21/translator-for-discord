@@ -1,43 +1,35 @@
-/* Reads and writes settings. Every change saves immediately — there is no Save
-   button, and the content script picks changes up through storage events. */
+/* Reads and writes the six settings. Every change saves immediately — there is
+   no Save button, and the content script picks changes up through storage. */
 
 (function () {
   'use strict';
 
   var $ = function (id) { return document.getElementById(id); };
 
-  var TOGGLES = ['enabled', 'skipSameLanguage', 'translateEmbeds', 'keepSlang',
-                 'casual', 'showBadge', 'romanized'];
-  var SELECTS = ['source', 'target', 'outgoingSource', 'outgoingTarget',
-                 'engine', 'romanizedLang'];
+  var SELECTS = ['source', 'target', 'outgoingTarget'];
   var SEGMENTS = ['mode', 'scope'];
 
   var here = { guildId: null, channelId: null };
 
   // ───────────────────────────────────────────────────── language lists
-  function fillLanguages(select, selected, options) {
-    var opts = options || {};
-    var html = '';
-
-    if (opts.auto) {
-      html += '<option value="auto"' + (selected === 'auto' ? ' selected' : '') +
-              '>Auto-detect</option>';
-    }
+  function fillLanguages(select, selected, withAuto) {
+    var html = withAuto
+      ? '<option value="auto"' + (selected === 'auto' ? ' selected' : '') +
+        '>Auto-detect</option>'
+      : '';
 
     for (var i = 0; i < DT_LANGUAGES.length; i++) {
       var code = DT_LANGUAGES[i][0];
-      var label = DT_LANGUAGES[i][1];
-      if (opts.only && opts.only.indexOf(code) === -1) continue;
-      // The two selects in a pair row are half width, so they carry the English
-      // name alone — "Bengali — বাংলা" is clipped at that size.
-      if (opts.short) label = label.split(' — ')[0];
+      // Half-width selects clip "Bengali — বাংলা", so the pair carries the
+      // English name alone.
+      var label = DT_LANGUAGES[i][1].split(' — ')[0];
       html += '<option value="' + code + '"' + (code === selected ? ' selected' : '') +
               '>' + label + '</option>';
     }
     select.innerHTML = html;
   }
 
-  function shortName(code) {
+  function nameOf(code) {
     if (code === 'auto') return 'any language';
     var row = DT_LANGUAGES.filter(function (l) { return l[0] === code; })[0];
     return row ? row[1].split(' — ')[0] : code;
@@ -45,17 +37,10 @@
 
   function save(patch) { chrome.storage.sync.set(patch); }
 
-  function savePartial(key, value) {
-    var patch = {};
-    patch[key] = value;
-    save(patch);
-  }
-
   // ─────────────────────────────────────────────────────────── render
   function render(s) {
-    TOGGLES.forEach(function (id) { $(id).checked = !!s[id]; });
+    $('enabled').checked = !!s.enabled;
     SELECTS.forEach(function (id) { $(id).value = s[id]; });
-    $('libreUrl').value = s.libreUrl || '';
 
     SEGMENTS.forEach(function (id) {
       [].forEach.call($(id).children, function (btn) {
@@ -64,27 +49,22 @@
     });
 
     $('body').classList.toggle('off', !s.enabled);
-    $('romanizedLangField').classList.toggle('hidden', !s.romanized);
-    $('libreOptions').classList.toggle('hidden', s.engine !== 'libre');
 
-    renderStatus(s);
+    var status = $('status');
+    status.textContent = s.enabled
+      ? nameOf(s.target) + ' · sending in ' + nameOf(s.outgoingTarget)
+      : 'Off';
+    status.classList.toggle('on', !!s.enabled);
+
+    $('modeHint').textContent = s.mode === 'auto'
+      ? 'Every message arrives in ' + nameOf(s.target) + '.'
+      : 'Messages stay as posted. Point at one to get its translate button.';
+
     renderScope(s);
   }
 
-  function renderStatus(s) {
-    var status = $('status');
-    if (!s.enabled) {
-      status.textContent = 'Off';
-      status.classList.remove('on');
-      return;
-    }
-    status.textContent = (s.mode === 'tap' ? 'Tap to translate · ' : '') +
-      shortName(s.target) + ' · sending in ' + shortName(s.outgoingTarget);
-    status.classList.add('on');
-  }
-
   function renderScope(s) {
-    // Pinning needs to know where you are, so those options only work when the
+    // Pinning needs to know where you are, so those two only work when the
     // popup was opened over an actual Discord channel.
     var buttons = $('scope').children;
     buttons[1].disabled = !here.guildId;
@@ -99,7 +79,8 @@
       hint = 'Open a Discord channel to pin this.';
     } else if (s.scope === 'server') {
       hint = anchored.guildId === here.guildId
-        ? (here.guildId === '@me' ? 'Pinned to your direct messages.' : 'Pinned to the server you have open.')
+        ? (here.guildId === '@me' ? 'Pinned to your direct messages.'
+                                  : 'Pinned to the server you have open.')
         : 'Pinned to another server — click again to move it here.';
     } else {
       hint = anchored.channelId === here.channelId
@@ -111,32 +92,27 @@
 
   // ─────────────────────────────────────────────────────────── wiring
   function attach(s) {
-    TOGGLES.forEach(function (id) {
-      $(id).addEventListener('change', function () {
-        s[id] = $(id).checked;
-        savePartial(id, s[id]);
-        render(s);
-      });
+    $('enabled').addEventListener('change', function () {
+      s.enabled = $('enabled').checked;
+      save({ enabled: s.enabled });
+      render(s);
     });
 
     SELECTS.forEach(function (id) {
       $(id).addEventListener('change', function () {
         s[id] = $(id).value;
-        savePartial(id, s[id]);
+        var patch = {};
+        patch[id] = s[id];
+        save(patch);
         render(s);
       });
-    });
-
-    $('libreUrl').addEventListener('change', function () {
-      s.libreUrl = $('libreUrl').value.trim();
-      savePartial('libreUrl', s.libreUrl);
     });
 
     $('mode').addEventListener('click', function (e) {
       var btn = e.target.closest('button');
       if (!btn) return;
       s.mode = btn.dataset.value;
-      savePartial('mode', s.mode);
+      save({ mode: s.mode });
       render(s);
     });
 
@@ -167,7 +143,7 @@
             return;
           }
           out.className = 'test-result ok';
-          out.textContent = '“ngl this is fire” → “' + res.text + '” via ' + res.provider;
+          out.textContent = '“ngl this is fire” → “' + res.text + '”';
         }
       );
     });
@@ -178,11 +154,9 @@
     here = dtParseLocation((tabs && tabs[0] && tabs[0].url) || '');
 
     dtLoadSettings().then(function (s) {
-      fillLanguages($('source'), s.source, { auto: true, short: true });
-      fillLanguages($('target'), s.target, { short: true });
-      fillLanguages($('outgoingSource'), s.outgoingSource, { auto: true, short: true });
-      fillLanguages($('outgoingTarget'), s.outgoingTarget, { short: true });
-      fillLanguages($('romanizedLang'), s.romanizedLang, { only: DT_ROMANIZABLE });
+      fillLanguages($('source'), s.source, true);
+      fillLanguages($('target'), s.target, false);
+      fillLanguages($('outgoingTarget'), s.outgoingTarget, false);
       render(s);
       attach(s);
     });

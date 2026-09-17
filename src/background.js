@@ -9,12 +9,19 @@ importScripts('dictionary.js', 'slang.js', 'tone.js');
 const MAX_CHARS = 4500;       // the free endpoints start failing past ~5k
 const MAX_ATTEMPTS = 2;       // per provider, before moving to the next one
 
-const DEFAULTS = {
-  engine: 'bing',
-  libreUrl: '',
-  casual: true,
-  keepSlang: true
-};
+/* None of this is configurable, because none of it has a second right answer.
+   Bing is the only keyless service that reads casual writing properly — Google
+   and MyMemory are word-for-word, DeepL has no Bengali and rate-limits without
+   a key, and every public LibreTranslate instance is now gone or key-gated. The
+   others stay in the chain purely so a Bing outage is not an outage here. */
+const ENGINE = 'bing';
+const LIBRE_URL = '';
+
+/* Languages the transliteration service can put back into their own script. */
+const ROMANIZABLE = new Set([
+  'bn', 'hi', 'ur', 'ta', 'te', 'ml', 'kn', 'mr', 'gu', 'pa',
+  'ne', 'si', 'ar', 'fa', 'he', 'ru', 'el'
+]);
 
 /* Bing reads casual writing correctly on its own, so pre-chewing the slang
    would only get in its way. The word-for-word backends need the help. */
@@ -358,17 +365,20 @@ async function translate(text, target, source, romanizeFrom) {
   let raw = (text || '').slice(0, MAX_CHARS);
   if (!raw.trim()) return { text: text, detected: null };
 
-  const config = await chrome.storage.sync.get(DEFAULTS);
-  if (config.keepSlang) await dtDictionaryReady();
+  await dtDictionaryReady();
 
-  const key = `${config.engine}|${source || 'auto'}|${target}|${romanizeFrom || ''}|${raw}`;
+  const key = `${source || 'auto'}|${target}|${romanizeFrom || ''}|${raw}`;
   const hit = cacheGet(key);
   if (hit) return hit;
 
   // Latin-typed text goes back into its own script first, and then the source
   // language is known rather than guessed.
+  // Latin-typed text is put back into its own script first, but only when that
+  // is what it actually is: a Latin script, not ordinary English, and a
+  // language the service can transliterate. Nobody has to switch this on.
   let romanizedTo = null;
-  if (romanizeFrom && looksRomanized(raw) && !dtLooksEnglish(raw)) {
+  if (romanizeFrom && ROMANIZABLE.has(romanizeFrom) &&
+      looksRomanized(raw) && !dtLooksEnglish(raw)) {
     try {
       const inScript = await transliterate(raw, romanizeFrom);
       if (inScript && inScript !== raw) {
@@ -381,11 +391,11 @@ async function translate(text, target, source, romanizeFrom) {
     }
   }
 
-  const chain = providerChain(config.engine, config.libreUrl);
+  const chain = providerChain(ENGINE, LIBRE_URL);
   let lastError = new Error('No provider available');
 
   // Words like "fomo" and "chill" come back exactly as typed.
-  const guarded = config.keepSlang ? dtProtect(raw) : { text: raw, kept: [] };
+  const guarded = dtProtect(raw);
 
   for (const name of chain) {
     // Each backend gets the form of the text it handles best.
@@ -396,11 +406,11 @@ async function translate(text, target, source, romanizeFrom) {
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       try {
-        const result = await PROVIDERS[name](prepared, target, source, config.libreUrl);
+        const result = await PROVIDERS[name](prepared, target, source, LIBRE_URL);
         if (!result.text) throw new Error('Empty translation');
         result.text = dtRestore(result.text, guarded.kept);
         // Relax the polite written register into how people actually type.
-        if (config.casual) result.text = dtCasualise(result.text, target);
+        result.text = dtCasualise(result.text, target);
         result.provider = name;
         if (romanizedTo) result.transliterated = romanizedTo;
         cacheSet(key, result);
