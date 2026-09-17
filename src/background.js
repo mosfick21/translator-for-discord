@@ -324,35 +324,6 @@ async function transliterate(text, lang) {
   return parts.join('').replace(/\u0000(\d+)\u0000/g, (_, n) => kept[Number(n)]);
 }
 
-/* Someone who types Banglish still writes plain English sometimes. Sending
-   "I am writing plain english here" through transliteration would spell it out
-   as "ই এম রাইটিং..." and make the translator work back from a phonetic
-   spelling, so text that is mostly ordinary English is left alone. */
-const COMMON_EN = new Set([
-  'a', 'about', 'after', 'again', 'all', 'also', 'am', 'an', 'and', 'any',
-  'are', 'as', 'at', 'back', 'be', 'because', 'been', 'before', 'being',
-  'but', 'by', 'can', 'come', 'could', 'did', 'do', 'does', 'doing', 'done',
-  'down', 'each', 'even', 'every', 'for', 'from', 'get', 'go', 'going', 'got',
-  'had', 'has', 'have', 'he', 'her', 'here', 'him', 'his', 'how', 'i', 'if',
-  'in', 'into', 'is', 'it', 'its', 'just', 'know', 'like', 'look', 'make',
-  'many', 'me', 'more', 'most', 'much', 'my', 'need', 'new', 'no', 'not',
-  'now', 'of', 'off', 'on', 'one', 'only', 'or', 'other', 'our', 'out',
-  'over', 'own', 'please', 'really', 'right', 'said', 'same', 'say', 'see',
-  'she', 'should', 'so', 'some', 'still', 'such', 'take', 'than', 'that',
-  'the', 'their', 'them', 'then', 'there', 'these', 'they', 'thing', 'think',
-  'this', 'those', 'through', 'time', 'to', 'too', 'under', 'up', 'us',
-  'use', 'very', 'want', 'was', 'way', 'we', 'well', 'were', 'what', 'when',
-  'where', 'which', 'while', 'who', 'why', 'will', 'with', 'would', 'you',
-  'your', 'yours'
-]);
-
-function looksEnglish(text) {
-  const words = (text.toLowerCase().match(/[a-z']+/g) || []).filter((w) => w.length > 1);
-  if (words.length < 3) return false;          // too short to tell
-  const known = words.filter((w) => COMMON_EN.has(w)).length;
-  return known / words.length >= 0.5;
-}
-
 /** Latin letters throughout? Then it is worth transliterating. */
 function looksRomanized(text) {
   const letters = text.match(/\p{L}/gu);
@@ -397,7 +368,7 @@ async function translate(text, target, source, romanizeFrom) {
   // Latin-typed text goes back into its own script first, and then the source
   // language is known rather than guessed.
   let romanizedTo = null;
-  if (romanizeFrom && looksRomanized(raw) && !looksEnglish(raw)) {
+  if (romanizeFrom && looksRomanized(raw) && !dtLooksEnglish(raw)) {
     try {
       const inScript = await transliterate(raw, romanizeFrom);
       if (inScript && inScript !== raw) {

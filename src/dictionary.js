@@ -80,6 +80,68 @@ function dtIsRealWord(word) {
   return true;
 }
 
+/* The words an English sentence is built out of. Other languages have their own
+   function words, so a text full of these is English and almost nothing else. */
+var DT_COMMON_EN = new Set([
+  'a', 'about', 'after', 'again', 'all', 'also', 'am', 'an', 'and', 'any',
+  'are', 'as', 'at', 'back', 'be', 'because', 'been', 'before', 'being',
+  'but', 'by', 'can', 'come', 'could', 'did', 'do', 'does', 'doing', 'done',
+  'down', 'each', 'even', 'every', 'for', 'from', 'get', 'go', 'going', 'got',
+  'had', 'has', 'have', 'he', 'her', 'here', 'him', 'his', 'how', 'i', 'if',
+  'in', 'into', 'is', 'it', 'its', 'just', 'know', 'like', 'look', 'make',
+  'many', 'me', 'more', 'most', 'much', 'my', 'need', 'new', 'no', 'not',
+  'now', 'of', 'off', 'on', 'one', 'only', 'or', 'other', 'our', 'out',
+  'over', 'own', 'please', 'really', 'right', 'said', 'same', 'say', 'see',
+  'she', 'should', 'so', 'some', 'still', 'such', 'take', 'than', 'that',
+  'the', 'their', 'them', 'then', 'there', 'these', 'they', 'thing', 'think',
+  'this', 'those', 'through', 'time', 'to', 'too', 'under', 'up', 'us',
+  'use', 'very', 'want', 'was', 'way', 'we', 'well', 'were', 'what', 'when',
+  'where', 'which', 'while', 'who', 'why', 'will', 'with', 'would', 'you',
+  'your', 'yours'
+]);
+
+/** How much of the text is built from ordinary English function words. */
+function dtCommonRatio(text) {
+  var words = String(text || '').toLowerCase().match(/[a-z']+/g);
+  if (!words || !words.length) return 0;
+  var known = 0;
+  for (var i = 0; i < words.length; i++) {
+    if (DT_COMMON_EN.has(words[i])) known++;
+  }
+  return known / words.length;
+}
+
+/**
+ * Is this text English? Two signals, because either one alone gets it wrong.
+ *
+ * The dictionary misses short slangy sentences — "this is so skibidi ngl" is
+ * two invented words out of three. Function words miss dense ones — "fomo is
+ * real rn, everyone aping in" carries almost none. A sentence only has to look
+ * English by one measure to count.
+ *
+ * Text too short to judge counts as English, which merely leaves the slang rule
+ * switched on; the curated lists still decide the outcome.
+ */
+function dtMostlyEnglish(text) {
+  var words = String(text || '').match(/[a-zA-Z]{3,16}/g);
+  if (!words || words.length < 3) return true;
+
+  var known = 0;
+  for (var i = 0; i < words.length; i++) {
+    if (dtIsRealWord(words[i])) known++;
+  }
+  return known / words.length >= 0.5 || dtCommonRatio(text) >= 0.4;
+}
+
+/** Ordinary English prose, as opposed to romanised text that happens to be Latin. */
+function dtLooksEnglish(text) {
+  var words = (String(text || '').toLowerCase().match(/[a-z']+/g) || [])
+    .filter(function (w) { return w.length > 1; });
+  if (words.length < 3) return false;
+  var known = words.filter(function (w) { return DT_COMMON_EN.has(w); }).length;
+  return known / words.length >= 0.5;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { dtIsRealWord: dtIsRealWord };
+  module.exports = { dtIsRealWord: dtIsRealWord, dtMostlyEnglish: dtMostlyEnglish };
 }

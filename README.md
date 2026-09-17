@@ -5,7 +5,6 @@
 # Translator for Discord
 
 **Read every Discord message in your own language. Send yours in theirs.**
-Real-time, in place, in 45 languages — with no account and no API key.
 
 ![Manifest](https://img.shields.io/badge/manifest-v3-5865F2)
 ![Languages](https://img.shields.io/badge/languages-45-5865F2)
@@ -17,71 +16,157 @@ Real-time, in place, in 45 languages — with no account and no API key.
 
 ---
 
-## What it does
+| | |
+|---|---|
+| **Setup** | None. No account, no API key |
+| **Backends** | Bing · Google ×2 · MyMemory · LibreTranslate |
+| **Languages** | 45 to read and write, 17 typeable in Latin letters |
+| **Scope** | All of Discord, one server, or one channel |
+| **Untouched** | Bot commands, links, mentions, emoji, code |
 
-Messages are translated **where they sit**. Nothing moves, nothing is added —
-the words simply arrive in your language, in the same place, in the same order.
+---
 
-It works the other way round too. Type in your own language, press Enter, and
-the message goes out translated.
+## Use cases
+
+### The server talks in English and you would rather not
+
+Messages are rewritten where they sit. Nothing moves.
+
+```diff
+- gm frens, wen mint?
++ gm frens, কখন mint?
+
+- ngl this is fire
++ সত্য বলতে এটা দারুন
+
+- bro this is sus, might be a rugpull
++ ভাই এটা sus, হতে পারে একটি rugpull
+```
+
+### Someone writes in a language you did not expect
+
+Detected per message. You never pick the source language.
+
+```diff
+- ¿alguien sabe el precio ahora?
++ এখন কেউ দাম জানে?
+```
+
+### You want to reply, but not in English
+
+Type in your language, press Enter, the message leaves translated.
+
+```diff
+- ভাই এটা তো দারুণ হইছে
++ Brother, this has turned out great
+```
+
+### You type your language on an English keyboard
+
+Banglish, Hinglish, Arabizi — turn it on, say which language, done.
+
+```diff
+- vai dam koto ekhon
++ Brother, how much is the price now?
+
+- ei project ta scam mone hoy, admin er sathe kotha bolo
++ This project seems like a scam, talk to the admin.
+```
+
+English words inside the sentence stay English:
 
 ```
-  they write  →  gm frens, wen mint?    you read  →  gm frens, কখন mint?
-  you type    →  vai dam koto ekhon     they read →  Brother, how much is the price now?
+  ei project ta scam mone hoy   →   এই project তা scam মনে হয়
 ```
 
-Free, open source, and nothing to set up: no account, no sign-up, no API key.
+### Internet words survive
+
+Every language just says *fomo*.
+
+```diff
+- fomo is real rn, everyone aping in
++ fomo এখন সত্যি, সবাই এতে যোগ দিচ্ছে
+
+- gas is insane, floor went to 2 ETH
++ gas পাগল, floor ২ ETH তে চলে গেছে
+```
+
+Words nobody has listed work the first time they appear:
+
+```diff
+- this is so skibidi ngl
++ এটা সত্যিই skibidi, সত্যি কথা বলতে
+```
+
+### Shorthand still means something
+
+Translations come from a language model, so the wording varies a little run to
+run. The meaning does not.
+
+```diff
+- idk tbh, brb
++ আমি আসলেই জানি না, একটু পরে আসছি
+```
+
+### Nothing breaks
+
+```
+  /ban @user                   →   /ban @user
+  !verify                      →   !verify
+  check https://opensea.io/x   →   চেক করো https://opensea.io/x
+  run `npm run build` first    →   প্রথমে `npm run build` চালান
+```
 
 ---
 
 ## Install
 
-1. **Code → Download ZIP**, then unzip it somewhere you will not delete —
-   Chrome loads the extension from that folder every time it starts.
-2. Open `chrome://extensions`.
-3. Turn on **Developer mode**, top right.
-4. Click **Load unpacked** and choose the folder.
-5. Open Discord, click the extension icon, pick your language.
+```
+1.  Code → Download ZIP, unzip somewhere permanent
+2.  chrome://extensions  →  Developer mode  →  Load unpacked
+3.  Open Discord, click the icon, pick a language
+```
 
-Chrome · Edge · Brave · Opera · any Chromium browser.
-Firefox needs one line changed — see [Development](#development).
+Chrome · Edge · Brave · Opera. Firefox needs
+[one line changed](ARCHITECTURE.md).
 
 ---
 
-## How it works
+## Settings
 
-In plain terms, four things happen:
+**Reading**
 
-1. **It watches the channel.** Every message already on screen, and every one
-   that arrives afterwards, is noticed straight away.
-2. **The words are sent to a translation service** — just the words. Links,
-   mentions, emoji and code are held back.
-3. **The translation replaces the original text in place.** The message does not
-   move, and everything held back is put straight back where it was.
-4. **When you type, the same happens in reverse** before the message is sent.
+| | |
+|---|---|
+| Translate into | 45 languages |
+| Skip same language | Leaves what you can already read |
+| Embeds | Bot embeds and link previews too |
+| Keep internet words | *fomo*, *chill*, *mint* stay in English |
+| Everyday wording | Not the polite written form |
 
-<div align="center">
+**Writing**
 
-<img src="assets/architecture.svg" alt="How it works" width="100%">
+| | |
+|---|---|
+| Send in | The language your message goes out in |
+| Latin letters | Banglish, Hinglish, Arabizi |
+| On Enter | Send it, or show the translation first |
 
-</div>
+**Where**
 
+| | |
+|---|---|
+| All of Discord | Every server and DM |
+| This server only | The one open when you chose it |
+| This channel only | That one channel |
 
-Five services, no keys. If one fails, the next answers.
-
-| | | |
-|---|---|---|
-| **Bing** | *default* | Reads casual writing the way a person does |
-| **Google** | | Fastest, but word for word. Two endpoints, separate limits |
-| **MyMemory** | | Open API, roughly 5,000 words a day |
-| **LibreTranslate** | | Fully open source, on a server you run yourself |
+`Alt+T` toggles · `Alt+click` a message shows the original
 
 ---
 
 ## Languages
 
-45 languages to read and write. ⌨️ marks the ones you can also **type in English
-letters** — Banglish, Hinglish, Arabizi and the rest.
+⌨️ marks the ones you can type in English letters.
 
 | | | |
 |---|---|---|
@@ -103,84 +188,34 @@ letters** — Banglish, Hinglish, Arabizi and the rest.
 
 ---
 
-## Using it
+## How it works
 
-Everything is in the popup. Changes apply the moment you make them — no save
-button, no reloading Discord.
+<div align="center">
 
-### Reading
+<img src="assets/architecture.svg" alt="Architecture" width="100%">
 
-Set **Translate everything into** and you are done. Four switches shape it:
+</div>
 
-| Switch | What it does |
-|---|---|
-| **Skip if already in that language** | Leaves messages you can already read |
-| **Translate embeds too** | Bot embeds and link previews as well as messages |
-| **Keep internet words as they are** | *fomo*, *chill*, *wagmi*, *mint* stay in English |
-| **Everyday wording** | Relaxes the stiff written form into how people actually type |
+Five backends, no keys. If one fails, the next answers.
 
-Hold **Alt** and click a message to see what was originally written.
-**Alt+T** turns everything off and on.
+| | | |
+|---|---|---|
+| **Bing** | *default* | Reads casual writing the way a person does |
+| **Google** | | Fastest, word for word. Two endpoints, separate limits |
+| **MyMemory** | | Open API, ~5,000 words a day |
+| **LibreTranslate** | | Open source, on a server you run |
 
-### Writing
-
-Turn on **Translate what I type before sending**, choose the language to send
-in, then pick what Enter does:
-
-| | |
-|---|---|
-| **Translate and send it** | Type, press Enter, the translated message goes out |
-| **Translate, let me check it first** | Fills the box and waits for a second Enter |
-
-Start with the second one until you trust it.
-
-Bot commands are never touched, so `/ban`, `!verify` and `?help` still work.
-
-### Typing in English letters
-
-If you write your language on an English keyboard, turn on **I type my language
-in English letters** and say which language it really is.
-
-Without it, translators guess wrong — `vai dam koto ekhon` gets read as
-Vietnamese. With it, the text is put back into its own script first, so the
-language is no longer a guess. English words inside the sentence stay English,
-because that is how people write.
-
-### Where it runs
-
-Open the popup while you are in the channel you care about and pick one:
-
-| | |
-|---|---|
-| **All of Discord** | Every server and every DM |
-| **This server only** | The server open when you chose it |
-| **This channel only** | That one channel |
-
----
-
-## Under the hood
-
-The short version. [ARCHITECTURE.md](ARCHITECTURE.md) has the long one —
-pipeline order, the dictionary format, how React is survived, known limits.
-
-| | |
-|---|---|
-| **Text nodes, not elements** | Mentions, links and formatting are never visited, so they survive intact |
-| **React-proof** | A `MutationObserver` re-applies from cache when Discord re-renders. The marker is a CSS pseudo-element; nothing is injected into Discord's DOM |
-| **Whole messages** | A message split by a mention is joined with numbered placeholders and sent as one string, so the translator sees a sentence |
-| **Dictionary, not a list** | A Bloom filter over 364k English words in 356 KB. A Latin word it does not know was invented by the internet, so it is held back — *skibidi* and *delulu* work on first sight |
-| **Curated where it must be** | Words that *are* English but mean something else here (*chill*, *gas*, *floor*), and greetings a dictionary happens to contain (*gm*, *gn*) |
-| **Spellings fixed first** | `wen mint?` becomes *"you mint?"* otherwise. Shorthand for a whole sentence — `brb`, `gtg` — is translated instead of held back |
-| **Tone relaxed** | Only where a mechanical change is always right: Bengali, Hindi, Turkish, Indonesian, Malay. Spanish, French and German conjugate the verb to match the pronoun, so they pass through untouched |
+Internals in **[ARCHITECTURE.md](ARCHITECTURE.md)** — pipeline order, dictionary
+format, how React is survived, known limits.
 
 ---
 
 ## Privacy
 
-Message text goes to the translation service you chose and nowhere else. No
-cookies, no account, no logging, no analytics. Settings stay in your browser.
+Message text goes to the backend you chose and nowhere else. No cookies, no
+account, no logging, no analytics. Settings stay in your browser.
 
-For nothing to leave your network at all, run LibreTranslate yourself:
+Keep it off the network entirely:
 
 ```bash
 docker run -p 5000:5000 libretranslate/libretranslate
@@ -190,19 +225,6 @@ docker run -p 5000:5000 libretranslate/libretranslate
 
 ## Development
 
-```
-manifest.json           MV3 manifest
-popup/                  settings panel, Discord's own palette
-src/content.js          observes the message list, rewrites text, drives the composer
-src/background.js       network, provider chain, cache
-src/slang.js            respellings, expansions, words held back
-src/dictionary.js       Bloom filter lookup
-src/dictionary.bin      364k words in 356 KB
-src/tone.js             polite register relaxed into speech
-test/                   mock Discord page, DevTools-driven DOM test
-tools/                  rebuilds the dictionary
-```
-
 ```bash
 npm run serve                                              # mock Discord page
 chrome --headless=new --remote-debugging-port=9222 about:blank
@@ -210,28 +232,15 @@ npm test                                                   # 8 DOM checks
 npm run build:dictionary                                   # rebuild the filter
 ```
 
-The test drives a real Chrome over the DevTools protocol against a page that
-reproduces Discord's markup, and asserts what changed: messages rewritten in
-place, a late message caught by the observer, mentions and links and code
-untouched.
-
-**Firefox** — replace the service worker declaration:
-
-```json
-"background": { "scripts": ["src/background.js"] }
-```
-
-**Extending**
-
-| | |
+| Add | Where |
 |---|---|
 | A language | `DT_LANGUAGES` in `src/common.js` |
-| A word that should stay untranslated | `DT_KEEP_WORDS` in `src/slang.js` |
+| A word that stays untranslated | `DT_KEEP_WORDS` in `src/slang.js` |
 | A chat spelling | `DT_RESPELL` in `src/slang.js` |
-| Tone rules for a language | `DT_TONE` in `src/tone.js` |
-| A translation backend | A function returning `{ text, detected }`, in `PROVIDERS` |
+| Tone rules | `DT_TONE` in `src/tone.js` |
+| A backend | `PROVIDERS` in `src/background.js` |
 
-Start with [ARCHITECTURE.md](ARCHITECTURE.md). Issues and pull requests welcome.
+Issues and pull requests welcome.
 
 ---
 

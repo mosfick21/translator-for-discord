@@ -227,6 +227,13 @@ function dtProtect(text) {
      dictionary instead: a Latin word no dictionary knows is one no translator
      will render well. That is what makes this work for words nobody has added
      yet. */
+  /* The dictionary only knows English, so "a word it does not recognise" means
+     "invented" only when the rest of the message is English. In Spanish,
+     "¿alguien sabe el precio?" is four unrecognised words and holding them back
+     would leave the message untranslated. Same dictionary, one ratio: if most
+     of the words are English, the odd one out is slang. */
+  if (!dtMostlyEnglish(masked)) return { text: masked, kept: kept };
+
   masked = masked.replace(/(?<![\p{L}\p{N}_{])[a-zA-Z]{3,16}(?![\p{L}\p{N}_}])/gu, function (word) {
     if (dtIsRealWord(word)) return word;
     // "brb", "gtg" and "ttyl" are missing from any dictionary too, but they are
