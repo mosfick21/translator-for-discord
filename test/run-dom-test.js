@@ -32,6 +32,8 @@ var STORED = ${JSON.stringify({ mode: MODE })};
 window.chrome = {
   runtime: {
     lastError: null,
+    // No artwork in the test package, so the button keeps its fallback glyph.
+    getURL: function (path) { return '/__missing__/' + path; },
     sendMessage: function (msg, cb) {
       setTimeout(function () {
         cb({ ok: true, text: '\\u00ab' + msg.text + '\\u00bb', detected: 'en' });
@@ -125,16 +127,29 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
           names: [].map.call(el.querySelectorAll('[class*="username"]'), function (n) { return n.textContent; })
         });
       });
-      var button = document.querySelector('.dt-send-button');
-      var tappable = document.querySelectorAll('[id^="message-content-"][data-dt-tap]').length;
+      // Both buttons live in our own layer, outside Discord's tree.
+      var layer = document.querySelector('.dt-layer');
+      var send = document.querySelector('.dt-btn-send');
+      var msgBtn = document.querySelector('.dt-btn-message');
+
+      // Hovering a message is what offers its button, so do that.
+      var first = document.querySelector('[id^="message-content-"]');
+      if (first) {
+        first.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+      }
+      var msgShown = msgBtn && getComputedStyle(msgBtn).display !== 'none';
       var embed = document.querySelector('[class*="embedDescription"]');
       var box = document.querySelector('div[role="textbox"]');
       return {
         messages: out,
         embed: embed && embed.textContent.trim(),
         composer: box && box.textContent,
-        composerButton: button ? { lang: button.dataset.dtLang, first: button.parentElement.firstChild === button } : null,
-        tappable: tappable
+        layerOutsideReact: !!layer && layer.parentElement === document.body,
+        sendButton: send ? {
+          lang: send.dataset.dtLang,
+          shown: getComputedStyle(send).display !== 'none'
+        } : null,
+        messageButtonShown: !!msgShown
       };
     })()`
   });
@@ -159,9 +174,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     check(data.messages.every((m) => !m.marked), 'nothing was translated on its own');
     check(byId['1001'] && byId['1001'].text === 'ngl this is fire',
           'the text is exactly as it was posted', byId['1001'] && byId['1001'].text);
-    check(data.tappable === 7, 'every message carries a translate button',
-          `${data.tappable} of 7`);
-    check(!!data.composerButton, 'the composer button is there too');
+    check(data.messageButtonShown, 'hovering a message offers its translate button');
+    check(!!data.sendButton && data.sendButton.shown, 'the send button is on screen');
+    check(data.layerOutsideReact, 'the buttons sit outside the app tree');
     console.log(`\n${failures ? failures + ' check(s) failed' : 'all checks passed'}\n`);
     ws.close();
     process.exit(failures ? 1 : 0);
@@ -184,12 +199,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
         'embed text was translated', data.embed);
   check(byId['1007'] && byId['1007'].names[0] === 'montytran',
         'usernames are never translated', byId['1007'] && byId['1007'].names[0]);
-  check(!!data.composerButton, 'the translate button was added to the composer');
-  check(!!data.composerButton && data.composerButton.first,
-        'it sits at the front of the button row');
-  check(!!data.composerButton && data.composerButton.lang === 'EN',
-        'it shows the language it will send in',
-        data.composerButton && data.composerButton.lang);
+  check(data.layerOutsideReact, 'the buttons sit outside the app tree');
+  check(!!data.sendButton && data.sendButton.shown, 'the send button is on screen');
+  check(!!data.sendButton && data.sendButton.lang === 'EN',
+        'it shows the language it will send in', data.sendButton && data.sendButton.lang);
+  check(!data.messageButtonShown,
+        'no per-message button while everything translates on its own');
 
   console.log(`\n${failures ? failures + ' check(s) failed' : 'all checks passed'}\n`);
   ws.close();

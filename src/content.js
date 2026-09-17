@@ -131,6 +131,7 @@
     var host = node.parentElement && node.parentElement.closest(MESSAGE_CONTENT + ',' + EMBED_PARTS);
     if (host) {
       host.setAttribute('data-dt-translated', '1');
+      host.removeAttribute('data-dt-working');
       if (!host.hasAttribute('data-dt-original')) {
         host.setAttribute('data-dt-original', original);
         host.setAttribute('title', 'Original: ' + original);
@@ -207,54 +208,155 @@
     });
   }
 
-  /* ─────────────────────────────────────────────────────── translate on tap
-     In tap mode a message is left alone until its button is used. The button is
-     a pseudo-element on the message itself rather than an injected node —
-     React owns this subtree and removes anything it did not create, sometimes
-     taking the page down with it. A pseudo-element is invisible to React.
+  /* ─────────────────────────────────────────────────────────────── buttons
+     Both buttons live in a layer of our own, appended to <body> and positioned
+     over the page from the coordinates of whatever they belong to.
 
-     Because a pseudo-element cannot receive its own click, the handler works
-     out where it was drawn: the badge sits at a fixed offset from the message,
-     so its rectangle follows from the message's own. BADGE must match the
-     values in content.css. */
-  var BADGE = { size: 20, gap: 6 };
+     Putting them inside Discord's own markup does not work: React owns that
+     tree, removes anything it did not create, and the composer's button row is
+     rebuilt often enough that an injected node never survives. A sibling of the
+     app root is invisible to React, so a plain <button> can be used — with a
+     real click, a real hover, and a real icon. */
 
-  function markTappable(root) {
-    if (root.hasAttribute('data-dt-translated')) return;
-    root.setAttribute('data-dt-tap', '1');
-  }
+  var layer = null;
+  var messageButton = null;
+  var composerButton = null;
+  var hovered = null;          // the message the pointer is over
 
-  function badgeRect(host) {
-    var box = host.getBoundingClientRect();
-    return {
-      left: box.left - BADGE.gap - BADGE.size,
-      top: box.top + 1,
-      right: box.left - BADGE.gap,
-      bottom: box.top + 1 + BADGE.size
+  var ICON = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">' +
+    '<path d="M12.87 15.07l-2.54-2.51.03-.03A17.5 17.5 0 0014.07 6H17V4h-7V2H8v2H1v2h11.17' +
+    'A15.4 15.4 0 019.5 11.2 15.9 15.9 0 017.4 8H5.4a17.9 17.9 0 002.8 4.5l-3.4 3.4L6.2 17.3' +
+    'l3.4-3.4 2.1 2.1.77-2.03zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33' +
+    'L19.12 17h-3.24z"/></svg>');
+
+  /* Artwork of our own is used when it is in the package, and the plain glyph
+     above stands in until it is. Checking with an Image means a missing file
+     leaves a working button rather than a blank one. */
+  function makeButton(className, title, artwork) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = className;
+    b.title = title;
+    b.setAttribute('aria-label', title);
+    b.style.backgroundImage = 'url("' + ICON + '")';
+
+    var url = chrome.runtime.getURL('assets/' + artwork);
+    var probe = new Image();
+    probe.onload = function () {
+      b.style.backgroundImage = 'url("' + url + '")';
+      b.classList.add('dt-btn-art');
     };
+    probe.src = url;
+
+    return b;
   }
 
-  document.addEventListener('click', function (e) {
-    if (!active || settings.mode !== 'tap') return;
+  function ensureLayer() {
+    if (layer && layer.isConnected) return;
 
-    var host = e.target.closest && e.target.closest('[data-dt-tap]');
-    if (!host) return;
+    layer = document.createElement('div');
+    layer.className = 'dt-layer';
 
-    var r = badgeRect(host);
-    if (e.clientX < r.left || e.clientX > r.right ||
-        e.clientY < r.top || e.clientY > r.bottom) return;
+    messageButton = makeButton('dt-btn dt-btn-message', 'Translate this message', 'icon-translate.png');
+    messageButton.addEventListener('mousedown', function (e) {
+      // mousedown rather than click: Discord closes hover state on mouseup.
+      e.preventDefault();
+      e.stopPropagation();
+      if (!hovered) return;
+      hovered.setAttribute('data-dt-working', '1');
+      handleBlock(hovered, true);
+      hideMessageButton();
+    });
 
-    e.preventDefault();
-    e.stopPropagation();
+    composerButton = makeButton('dt-btn dt-btn-send', 'Translate and send', 'icon-send.png');
+    composerButton.addEventListener('mousedown', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var box = document.querySelector('div[role="textbox"][data-slate-editor="true"]') ||
+                document.querySelector('form div[role="textbox"]');
+      if (box) translateAndSend(box);
+    });
 
-    host.removeAttribute('data-dt-tap');
-    host.setAttribute('data-dt-working', '1');
-    handleBlock(host, true);
+    layer.appendChild(messageButton);
+    layer.appendChild(composerButton);
+    document.body.appendChild(layer);
+  }
 
-    // The attribute is only there to spin the badge; the translation itself
-    // clears it by marking the message translated.
-    setTimeout(function () { host.removeAttribute('data-dt-working'); }, 4000);
+  function hideMessageButton() {
+    hovered = null;
+    if (messageButton) messageButton.style.display = 'none';
+  }
+
+  /* The message button follows the pointer from message to message. It is only
+     offered in tap mode; in auto mode the message is already translated. */
+  document.addEventListener('mouseover', function (e) {
+    if (!active || settings.mode !== 'tap' || !e.target.closest) return;
+
+    var host = e.target.closest(MESSAGE_CONTENT);
+    if (!host || host.hasAttribute('data-dt-translated')) {
+      if (!e.target.closest('.dt-btn')) hideMessageButton();
+      return;
+    }
+
+    ensureLayer();
+    hovered = host;
+    placeMessageButton();
   }, true);
+
+  function placeMessageButton() {
+    if (!hovered || !hovered.isConnected) return hideMessageButton();
+
+    var box = hovered.getBoundingClientRect();
+    // The gutter left of the text, where Discord shows the avatar column.
+    var left = box.left - 30;
+    if (left < 8) left = box.right + 6;          // no room: sit after the text
+
+    messageButton.style.display = 'block';
+    messageButton.style.left = Math.round(left) + 'px';
+    messageButton.style.top = Math.round(box.top) + 'px';
+  }
+
+  /* The send button sits just left of Discord's own composer buttons. */
+  function placeComposerButton() {
+    if (!composerButton) return;
+
+    var form = document.querySelector('form div[role="textbox"]');
+    form = form && (form.closest('form') || form.parentElement);
+    if (!form) { composerButton.style.display = 'none'; return; }
+
+    var box = form.getBoundingClientRect();
+    if (!box.width) { composerButton.style.display = 'none'; return; }
+
+    // Line up with the row of gift and emoji buttons when there is one, so the
+    // three read as one set rather than ours floating loose.
+    var neighbour = form.querySelector('[class*="buttons"] button, [class*="buttons"] [role="button"]');
+    var right = neighbour ? neighbour.getBoundingClientRect().left - 4 : box.right - 12;
+
+    composerButton.style.display = 'block';
+    composerButton.style.left = Math.round(right - 34) + 'px';
+    composerButton.style.top = Math.round(box.top + (box.height - 34) / 2) + 'px';
+    composerButton.dataset.dtLang = settings.outgoingTarget.toUpperCase();
+    composerButton.title = 'Translate and send in ' +
+      settings.outgoingTarget.toUpperCase();
+  }
+
+  function refreshButtons() {
+    if (!active) {
+      if (layer) layer.style.display = 'none';
+      return;
+    }
+    ensureLayer();
+    layer.style.display = '';
+    placeComposerButton();
+    if (hovered) placeMessageButton();
+    if (settings.mode !== 'tap') hideMessageButton();
+  }
+
+  // Anything that moves the page moves the buttons with it.
+  window.addEventListener('scroll', refreshButtons, true);
+  window.addEventListener('resize', refreshButtons);
+  setInterval(refreshButtons, 400);
 
   /* Bot commands have to survive byte for byte or they stop working: a slash
      command, or one of the prefixes bots use, followed immediately by a word.
@@ -270,11 +372,8 @@
   function handleBlock(root, force) {
     if (looksLikeCommand(root.textContent || '')) return;
 
-    // On tap, a message waits for the button rather than translating itself.
-    if (settings.mode === 'tap' && !force) {
-      markTappable(root);
-      return;
-    }
+    // On tap, a message waits for its button rather than translating itself.
+    if (settings.mode === 'tap' && !force) return;
 
     var nodes = collectTextNodes(root);
     if (!nodes.length) return;
@@ -318,7 +417,7 @@
     scanTimer = setTimeout(function () {
       scanTimer = null;
       scan(document);
-      ensureComposerButton();
+      refreshButtons();
     }, 120);
   }
 
@@ -393,61 +492,12 @@
       });
   }
 
-  /* A button of our own next to Discord's gift and emoji buttons. It translates
-     and sends in one click, which means the feature works without turning on
-     "translate what I type" — useful when only some messages need it.
-
-     Discord's React will remove anything injected into its tree on a re-render,
-     so the same observer that scans messages puts it back. */
-  var BUTTON_CLASS = 'dt-send-button';
-
-  function ensureComposerButton() {
-    var box = document.querySelector('div[role="textbox"][data-slate-editor="true"]') ||
-              document.querySelector('form div[role="textbox"]');
-    if (!box) return;
-
-    var form = box.closest('form') || box.parentElement;
-    if (!form) return;
-
-    // The row holding the gift, GIF, sticker and emoji buttons.
-    var row = form.querySelector('[class*="buttons"]');
-    if (!row || row.querySelector('.' + BUTTON_CLASS)) return;
-
-    var button = document.createElement('button');
-    button.type = 'button';
-    button.className = BUTTON_CLASS;
-    button.setAttribute('aria-label', 'Translate and send');
-    button.innerHTML =
-      '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
-      '<path d="M12.87 15.07l-2.54-2.51.03-.03A17.5 17.5 0 0014.07 6H17V4h-7V2H8v2H1v2h11.17A15.4 15.4 0 019.5 11.2 15.9 15.9 0 017.4 8H5.4a17.9 17.9 0 002.8 4.5l-3.4 3.4L6.2 17.3l3.4-3.4 2.1 2.1.77-2.03zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>' +
-      '</svg>';
-
-    button.addEventListener('click', function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      translateAndSend(box);
-    });
-
-    row.insertBefore(button, row.firstChild);
-    refreshComposerButton();
-  }
-
-  function refreshComposerButton() {
-    var button = document.querySelector('.' + BUTTON_CLASS);
-    if (!button) return;
-    var name = settings.outgoingTarget.toUpperCase();
-    button.title = 'Translate and send in ' + name;
-    button.dataset.dtLang = name;
-  }
-
   // ------------------------------------------------------------------- wiring
   function applyState() {
     // CSS cannot read settings, so mirror the badge preference onto <html>.
     document.documentElement.setAttribute('data-dt-badge', settings.showBadge ? '1' : '0');
 
     var next = scopeAllows();
-    refreshComposerButton();
-
     if (next === active) {
       if (active) scheduleScan();
       return;
@@ -458,12 +508,9 @@
         childList: true, subtree: true, characterData: true
       });
       scan(document);
-      ensureComposerButton();
     } else {
       observer.disconnect();
       revertAll();
-      var button = document.querySelector('.' + BUTTON_CLASS);
-      if (button) button.remove();
     }
   }
 
