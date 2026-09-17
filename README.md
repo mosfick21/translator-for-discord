@@ -160,6 +160,9 @@ Open the popup while you are in the channel you care about and pick one:
 
 ## Under the hood
 
+The short version. [ARCHITECTURE.md](ARCHITECTURE.md) has the long one —
+pipeline order, the dictionary format, how React is survived, known limits.
+
 | | |
 |---|---|
 | **Text nodes, not elements** | Mentions, links and formatting are never visited, so they survive intact |
@@ -228,7 +231,7 @@ untouched.
 | Tone rules for a language | `DT_TONE` in `src/tone.js` |
 | A translation backend | A function returning `{ text, detected }`, in `PROVIDERS` |
 
-Issues and pull requests welcome.
+Start with [ARCHITECTURE.md](ARCHITECTURE.md). Issues and pull requests welcome.
 
 ---
 
