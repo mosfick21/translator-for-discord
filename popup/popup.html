@@ -8,8 +8,9 @@
 <body>
 
   <header class="head">
+    <img class="head-icon" src="../icons/icon48.png" alt="">
     <div class="head-text">
-      <h1>Translator for Discord</h1>
+      <h1>Translator</h1>
       <p id="status" class="status">Loading…</p>
     </div>
     <label class="switch" title="Turn everything on or off (Alt+T)">
@@ -20,63 +21,110 @@
 
   <main id="body">
 
+    <!-- ── reading ─────────────────────────────────────────────── -->
     <section class="card">
       <h2>Messages you read</h2>
-      <label class="field">
-        <span class="label">Translate everything into</span>
-        <select id="target"></select>
-      </label>
-      <label class="check">
-        <input type="checkbox" id="skipSameLanguage">
-        <span>Leave messages alone if they are already in that language</span>
-      </label>
-      <label class="check">
-        <input type="checkbox" id="translateEmbeds">
-        <span>Translate embeds too</span>
-      </label>
-      <label class="check">
-        <input type="checkbox" id="keepSlang">
-        <span>Keep internet words as they are (fomo, chill, wagmi)</span>
-      </label>
-      <label class="check">
-        <input type="checkbox" id="casual">
-        <span>Everyday wording, not the polite written form</span>
-      </label>
-      <label class="check">
-        <input type="checkbox" id="showBadge">
-        <span>Show a small "translated" marker</span>
-      </label>
-    </section>
 
-    <section class="card">
-      <h2>Messages you send</h2>
-      <label class="check">
-        <input type="checkbox" id="outgoingEnabled">
-        <span>Translate what I type before sending</span>
-      </label>
-      <div id="outgoingOptions">
-        <label class="field">
-          <span class="label">Send my messages in</span>
-          <select id="outgoingTarget"></select>
+      <div class="pair">
+        <label class="pair-side">
+          <span class="pair-label">From</span>
+          <select id="source"></select>
         </label>
-        <label class="check">
-          <input type="checkbox" id="romanized">
-          <span>I type my language in English letters (Banglish, Hinglish…)</span>
+        <span class="pair-arrow" aria-hidden="true">→</span>
+        <label class="pair-side">
+          <span class="pair-label">Into</span>
+          <select id="target"></select>
         </label>
-        <label class="field" id="romanizedLangField">
-          <span class="label">The language I am really typing</span>
-          <select id="romanizedLang"></select>
+      </div>
+
+      <div class="rows">
+        <label class="row">
+          <span class="row-text">
+            Skip what I can already read
+            <em>Leaves a message alone when it is already in that language</em>
+          </span>
+          <span class="mini"><input type="checkbox" id="skipSameLanguage"><span></span></span>
         </label>
-        <label class="field">
-          <span class="label">When I press Enter</span>
-          <select id="outgoingMode">
-            <option value="send">Translate and send it</option>
-            <option value="preview">Translate, let me check it first</option>
-          </select>
+        <label class="row">
+          <span class="row-text">
+            Translate embeds
+            <em>Bot embeds and link previews too</em>
+          </span>
+          <span class="mini"><input type="checkbox" id="translateEmbeds"><span></span></span>
+        </label>
+        <label class="row">
+          <span class="row-text">
+            Keep internet words
+            <em>fomo, chill, wagmi stay as they are</em>
+          </span>
+          <span class="mini"><input type="checkbox" id="keepSlang"><span></span></span>
+        </label>
+        <label class="row">
+          <span class="row-text">
+            Everyday wording
+            <em>Not the polite written form</em>
+          </span>
+          <span class="mini"><input type="checkbox" id="casual"><span></span></span>
+        </label>
+        <label class="row">
+          <span class="row-text">
+            Show the translated marker
+            <em>A faint tag after each message</em>
+          </span>
+          <span class="mini"><input type="checkbox" id="showBadge"><span></span></span>
         </label>
       </div>
     </section>
 
+    <!-- ── writing ─────────────────────────────────────────────── -->
+    <section class="card">
+      <h2>Messages you send</h2>
+
+      <label class="row row-lead">
+        <span class="row-text">
+          Translate what I type
+          <em>Before the message is sent</em>
+        </span>
+        <span class="mini"><input type="checkbox" id="outgoingEnabled"><span></span></span>
+      </label>
+
+      <div id="outgoingOptions">
+        <div class="pair">
+          <label class="pair-side">
+            <span class="pair-label">I write in</span>
+            <select id="outgoingSource"></select>
+          </label>
+          <span class="pair-arrow" aria-hidden="true">→</span>
+          <label class="pair-side">
+            <span class="pair-label">Send as</span>
+            <select id="outgoingTarget"></select>
+          </label>
+        </div>
+
+        <label class="row">
+          <span class="row-text">
+            I type in English letters
+            <em>Banglish, Hinglish, Arabizi</em>
+          </span>
+          <span class="mini"><input type="checkbox" id="romanized"><span></span></span>
+        </label>
+
+        <label class="field" id="romanizedLangField">
+          <span class="label">Really typing</span>
+          <select id="romanizedLang"></select>
+        </label>
+
+        <div class="field">
+          <span class="label">When I press Enter</span>
+          <div class="segmented" id="outgoingMode">
+            <button type="button" data-value="send">Send it</button>
+            <button type="button" data-value="preview">Show me first</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── engine ──────────────────────────────────────────────── -->
     <section class="card">
       <h2>Translated by</h2>
       <label class="field">
@@ -87,50 +135,34 @@
           <option value="libre">LibreTranslate — your own server</option>
         </select>
       </label>
+
       <div id="libreOptions" class="hidden">
         <label class="field">
           <span class="label">Server address</span>
           <input type="text" id="libreUrl" placeholder="http://localhost:5000" spellcheck="false">
         </label>
-        <p class="hint">
-          Every public LibreTranslate instance now wants an API key, so run your own:
-          <code>docker run -p 5000:5000 libretranslate/libretranslate</code>
-        </p>
+        <p class="hint">Public instances now want a key, so run your own:
+          <code>docker run -p 5000:5000 libretranslate/libretranslate</code></p>
       </div>
-      <p class="hint" id="engineHint">
-        None of these need an account or a key. If one stops responding, the next takes over.
-      </p>
-      <p class="hint" id="testLine"><a href="#" id="testBtn">Test it</a></p>
+
+      <div class="test">
+        <button type="button" id="testBtn" class="btn">Test it</button>
+        <span id="testResult" class="test-result">No key needed. One fails, the next answers.</span>
+      </div>
     </section>
 
+    <!-- ── scope ───────────────────────────────────────────────── -->
     <section class="card">
       <h2>Where it runs</h2>
-      <div class="scopes">
-        <label class="radio">
-          <input type="radio" name="scope" value="everywhere">
-          <span>
-            <strong>All of Discord</strong>
-            <em>Every server, every DM.</em>
-          </span>
-        </label>
-        <label class="radio">
-          <input type="radio" name="scope" value="server">
-          <span>
-            <strong>This server only</strong>
-            <em id="serverHint">—</em>
-          </span>
-        </label>
-        <label class="radio">
-          <input type="radio" name="scope" value="channel">
-          <span>
-            <strong>This channel only</strong>
-            <em id="channelHint">—</em>
-          </span>
-        </label>
+      <div class="segmented wide" id="scope">
+        <button type="button" data-value="everywhere">Everywhere</button>
+        <button type="button" data-value="server">This server</button>
+        <button type="button" data-value="channel">This channel</button>
       </div>
+      <p class="hint" id="scopeHint">Every server and every DM.</p>
     </section>
 
-    <p class="foot">Alt+T toggles · Alt+click a message to see the original</p>
+    <p class="foot"><kbd>Alt</kbd>+<kbd>T</kbd> toggles · <kbd>Alt</kbd>+click shows the original</p>
   </main>
 
   <script src="../src/common.js"></script>

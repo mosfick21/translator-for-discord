@@ -26,96 +26,34 @@
 
 ---
 
-## Use cases
-
-### The server talks in English and you would rather not
+## What it does
 
 Messages are rewritten where they sit. Nothing moves.
 
 ```diff
 - welcome to the server, glad you made it
 + সার্ভারে স্বাগতম, খুশি হলাম তুমি এসেছো
-
-- anyone up for a game tonight?
-+ আজ রাতে কেউ কি খেলায় আসবে?
-
-- thanks a lot, that really helped me
-+ অনেক ধন্যবাদ, এটা সত্যিই আমাকে সাহায্য করেছে
 ```
 
-### Someone writes in a language you did not expect
-
-Detected per message. You never pick the source language.
-
-```diff
-- ¿alguien sabe el precio ahora?
-+ এখন কেউ দাম জানে?
-```
-
-### You want to reply, but not in English
-
-Type in your language, press Enter, the message leaves translated.
-
-```diff
-- ভাই এটা তো দারুণ হইছে
-+ Brother, this has turned out great
-```
-
-### You type your language on an English keyboard
-
-Banglish, Hinglish, Arabizi — turn it on, say which language, done.
+And the other way round — type in your language, press Enter, or click the
+translate button in the composer:
 
 ```diff
 - vai dam koto ekhon
 + Brother, how much is the price now?
-
-- ei project ta scam mone hoy, admin er sathe kotha bolo
-+ This project seems like a scam, talk to the admin.
 ```
 
-English words inside the sentence stay English:
+That second one is Bengali typed on an English keyboard. Hindi, Arabic and
+fifteen others work the same way.
 
-```
-  ei project ta scam mone hoy   →   এই project তা scam মনে হয়
-```
-
-### Internet words survive
-
-Every language just says *fomo*.
-
-```diff
-- fomo is real rn, everyone aping in
-+ fomo এখন সত্যি, সবাই এতে যোগ দিচ্ছে
-
-- gas is insane, floor went to 2 ETH
-+ gas পাগল, floor ২ ETH তে চলে গেছে
-```
-
-Words nobody has listed work the first time they appear:
-
-```diff
-- this is so skibidi ngl
-+ এটা সত্যিই skibidi, সত্যি কথা বলতে
-```
-
-### Shorthand still means something
-
-Translations come from a language model, so the wording varies a little run to
-run. The meaning does not.
-
-```diff
-- idk tbh, brb
-+ আমি আসলেই জানি না, একটু পরে আসছি
-```
-
-### Nothing breaks
-
-```
-  /ban @user                   →   /ban @user
-  !verify                      →   !verify
-  check https://opensea.io/x   →   চেক করো https://opensea.io/x
-  run `npm run build` first    →   প্রথমে `npm run build` চালান
-```
+| Also | |
+|---|---|
+| Any source language | Detected per message, or pin it to one |
+| Internet words | *fomo*, *chill*, *skibidi* stay as they are |
+| Shorthand | `brb`, `gtg`, `ttyl` translate to what they mean |
+| Bot commands | `/ban`, `!verify` go through byte for byte |
+| Links, mentions, code | Never touched |
+| Names | Never translated |
 
 ---
 
@@ -192,7 +130,7 @@ Chrome · Edge · Brave · Opera. Firefox needs
 
 <div align="center">
 
-<img src="assets/architecture.svg" alt="Architecture" width="100%">
+<img src="assets/architecture.png" alt="Architecture" width="100%">
 
 </div>
 

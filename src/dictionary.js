@@ -130,7 +130,17 @@ function dtMostlyEnglish(text) {
   for (var i = 0; i < words.length; i++) {
     if (dtIsRealWord(words[i])) known++;
   }
-  return known / words.length >= 0.5 || dtCommonRatio(text) >= 0.4;
+  var recognised = known / words.length;
+  var common = dtCommonRatio(text);
+
+  // Plenty of function words settles it on its own.
+  if (common >= 0.4) return true;
+
+  // Otherwise the dictionary needs backing up. An English dictionary is full of
+  // short words that are also ordinary words elsewhere — "MET tidur bang" is
+  // two-thirds recognised and not a word of English. Real English of any length
+  // carries at least one "is", "the" or "you".
+  return recognised >= 0.5 && common > 0;
 }
 
 /** Ordinary English prose, as opposed to romanised text that happens to be Latin. */

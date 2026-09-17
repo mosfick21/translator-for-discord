@@ -3,6 +3,10 @@
 
 var DT_DEFAULTS = {
   enabled: true,
+  // What you read: 'auto' lets each message be detected on its own, which is
+  // right for a mixed channel. Naming a language is better when you know the
+  // server speaks one and want to stop the detector guessing.
+  source: 'auto',
   target: 'bn',
   // 'everywhere' | 'server' | 'channel'
   scope: 'everywhere',
@@ -24,6 +28,9 @@ var DT_DEFAULTS = {
 
   // --- Outgoing: what you type gets translated before it is sent ---
   outgoingEnabled: false,
+  // The language you write in. 'auto' works, but naming it is more reliable —
+  // a short message is easy to misdetect.
+  outgoingSource: 'auto',
   outgoingTarget: 'en',
   // 'send'    -> translate, then send straight away
   // 'preview' -> translate into the box and let you hit Enter yourself

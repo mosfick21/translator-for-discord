@@ -116,12 +116,19 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
           marked: el.hasAttribute('data-dt-translated'),
           links: [].map.call(el.querySelectorAll('a'), function (a) { return a.textContent; }),
           mentions: [].map.call(el.querySelectorAll('.mention'), function (m) { return m.textContent; }),
-          code: [].map.call(el.querySelectorAll('code'), function (c) { return c.textContent; })
+          code: [].map.call(el.querySelectorAll('code'), function (c) { return c.textContent; }),
+          names: [].map.call(el.querySelectorAll('[class*="username"]'), function (n) { return n.textContent; })
         });
       });
+      var button = document.querySelector('.dt-send-button');
       var embed = document.querySelector('[class*="embedDescription"]');
       var box = document.querySelector('div[role="textbox"]');
-      return { messages: out, embed: embed && embed.textContent.trim(), composer: box && box.textContent };
+      return {
+        messages: out,
+        embed: embed && embed.textContent.trim(),
+        composer: box && box.textContent,
+        composerButton: button ? { lang: button.dataset.dtLang, first: button.parentElement.firstChild === button } : null
+      };
     })()`
   });
 
@@ -138,7 +145,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   console.log('\nChecks:\n');
   const byId = Object.fromEntries(data.messages.map((m) => [m.id, m]));
 
-  check(data.messages.length === 6, 'all six messages were seen',
+  check(data.messages.length === 7, 'all seven messages were seen',
         `${data.messages.length} found`);
   check(data.messages.every((m) => m.marked), 'every message got the translated marker');
   check(byId['1001'] && byId['1001'].text.includes('«'),
@@ -153,6 +160,14 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
         'inline code is left untouched', byId['1004'] && byId['1004'].code[0]);
   check(!!data.embed && data.embed.includes('«'),
         'embed text was translated', data.embed);
+  check(byId['1007'] && byId['1007'].names[0] === 'montytran',
+        'usernames are never translated', byId['1007'] && byId['1007'].names[0]);
+  check(!!data.composerButton, 'the translate button was added to the composer');
+  check(!!data.composerButton && data.composerButton.first,
+        'it sits at the front of the button row');
+  check(!!data.composerButton && data.composerButton.lang === 'EN',
+        'it shows the language it will send in',
+        data.composerButton && data.composerButton.lang);
 
   console.log(`\n${failures ? failures + ' check(s) failed' : 'all checks passed'}\n`);
   ws.close();

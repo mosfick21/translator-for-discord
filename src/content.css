@@ -1,6 +1,25 @@
 /* Styling for translated messages. Everything uses Discord's own CSS variables
    so it follows light/dark theme and any custom theme the user has on. */
 
+/* Discord's own font carries no Bengali, Devanagari, Arabic or Thai, so the
+   browser falls back per glyph and the line ends up cramped and sitting oddly
+   against the Latin text around it. Naming the fallbacks explicitly, and giving
+   the line the height those scripts need, makes a translated message sit the
+   same way an English one does.
+
+   line-height is set in ems rather than a plain number so a nested element
+   inherits the computed height rather than recomputing it from its own size. */
+[data-dt-translated] {
+  font-family:
+    "gg sans", "Noto Sans",
+    "Noto Sans Bengali", "Nirmala UI", "Vrinda", "Shonar Bangla",
+    "Noto Sans Devanagari", "Noto Sans Arabic", "Segoe UI Historic",
+    "Noto Sans Thai", "Noto Sans Hebrew", "Noto Sans Sinhala",
+    "Noto Sans Myanmar", "Noto Sans Tamil",
+    "Helvetica Neue", Helvetica, Arial, sans-serif;
+  line-height: 1.55em;
+}
+
 /* The little marker after a translated message. */
 html[data-dt-badge="1"] [data-dt-translated]::after {
   content: "translated";
@@ -53,4 +72,41 @@ html[data-dt-badge="1"] [data-dt-translated].dt-show-original::after {
 div[role="textbox"][data-dt-busy="1"] {
   opacity: 0.55;
   transition: opacity 80ms ease-out;
+}
+
+/* The translate-and-send button, sized and coloured like Discord's own
+   composer buttons so it does not read as an add-on. */
+.dt-send-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 40px;
+  height: 44px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--interactive-normal, #b5bac1);
+  transition: color 120ms ease;
+}
+
+.dt-send-button:hover { color: var(--interactive-hover, #dbdee1); }
+.dt-send-button:active { color: var(--interactive-active, #f2f3f5); }
+
+/* The target language, small, in the corner of the icon — so it is obvious
+   what pressing it will do without hovering for the tooltip. */
+.dt-send-button::after {
+  content: attr(data-dt-lang);
+  position: absolute;
+  right: 3px;
+  bottom: 8px;
+  padding: 0 2px;
+  border-radius: 3px;
+  background: var(--background-secondary, #2b2d31);
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 10px;
+  letter-spacing: 0.02em;
+  pointer-events: none;
 }

@@ -22,7 +22,15 @@
   // Never touch what is inside these — URLs, code, mentions and emoji must
   // survive untouched or the message stops working.
   var SKIP_TAGS = { CODE: 1, PRE: 1, A: 1, IMG: 1, SVG: 1, BUTTON: 1, TIME: 1 };
-  var SKIP_CLASS = /mention|emoji|timestamp|codeBlock|inlineCode|blockquoteDivider/i;
+
+  /* Names are not words. A username, nickname or role label that happens to sit
+     inside message content — a reply preview, a join notice — must come through
+     exactly as it is, or people stop being findable by the name they chose. */
+  var SKIP_CLASS = new RegExp([
+    'mention', 'emoji', 'timestamp', 'codeBlock', 'inlineCode',
+    'blockquoteDivider', 'username', 'nickname', 'displayName', 'author',
+    'botTag', 'roleName', 'memberName', 'tag_', 'headerText'
+  ].join('|'), 'i');
 
   // ------------------------------------------------------------------- state
   var localCache = new Map();        // original text -> translated text
@@ -56,11 +64,18 @@
     }
   }
 
-  function translate(text, target, romanizeFrom) {
+  function translate(text, target, source, romanizeFrom) {
     return enqueue(function () {
       return new Promise(function (resolve) {
         chrome.runtime.sendMessage(
-          { type: 'dt:translate', text: text, target: target, romanizeFrom: romanizeFrom || null },
+          {
+            type: 'dt:translate',
+            text: text,
+            target: target,
+            // 'auto' is sent as null so the backend does its own detection.
+            source: source && source !== 'auto' ? source : null,
+            romanizeFrom: romanizeFrom || null
+          },
           function (res) {
             if (chrome.runtime.lastError || !res || !res.ok) resolve(null);
             else resolve(res);
@@ -141,7 +156,7 @@
     if (pending.has(original)) return;
     pending.add(original);
 
-    translate(original, settings.target).then(function (res) {
+    translate(original, settings.target, settings.source).then(function (res) {
       pending.delete(original);
       if (!res) return;
       // Already in the target language? Leave the message exactly as it is.
@@ -180,7 +195,7 @@
     if (pending.has(joined)) return;
     pending.add(joined);
 
-    translate(joined, settings.target).then(function (res) {
+    translate(joined, settings.target, settings.source).then(function (res) {
       pending.delete(joined);
       if (!res) return;
       if (settings.skipSameLanguage && res.detected === settings.target) {
@@ -248,11 +263,13 @@
     scanTimer = setTimeout(function () {
       scanTimer = null;
       scan(document);
+      ensureComposerButton();
     }, 120);
   }
 
   var observer = new MutationObserver(function (records) {
     if (!active) return;
+
     for (var i = 0; i < records.length; i++) {
       if (records[i].addedNodes.length || records[i].type === 'characterData') {
         scheduleScan();
@@ -301,6 +318,76 @@
     box.dispatchEvent(new KeyboardEvent('keyup', init));
   }
 
+  /* Translate whatever is in the box and send it. Shared by the Enter handler
+     and the button in the composer. */
+  function translateAndSend(box, forceSend) {
+    var text = (box.textContent || '').trim();
+    if (!text || looksLikeCommand(text) || box.dataset.dtBusy === '1') return;
+
+    box.dataset.dtBusy = '1';
+    // If the user types their language in Latin letters, it is put back into
+    // its own script before translating — otherwise "vai dam koto ekhon" gets
+    // read as Vietnamese.
+    var romanizeFrom = settings.romanized ? settings.romanizedLang : null;
+
+    translate(text, settings.outgoingTarget, settings.outgoingSource, romanizeFrom)
+      .then(function (res) {
+        delete box.dataset.dtBusy;
+        var out = res && res.text ? res.text : text;   // on failure, send what was typed
+        if (out !== text) replaceComposerText(box, out);
+
+        if (forceSend || settings.outgoingMode === 'send') pressEnter(box);
+        else box.dataset.dtDone = out;                 // the next Enter just sends it
+      });
+  }
+
+  /* A button of our own next to Discord's gift and emoji buttons. It translates
+     and sends in one click, which means the feature works without turning on
+     "translate what I type" — useful when only some messages need it.
+
+     Discord's React will remove anything injected into its tree on a re-render,
+     so the same observer that scans messages puts it back. */
+  var BUTTON_CLASS = 'dt-send-button';
+
+  function ensureComposerButton() {
+    var box = document.querySelector('div[role="textbox"][data-slate-editor="true"]') ||
+              document.querySelector('form div[role="textbox"]');
+    if (!box) return;
+
+    var form = box.closest('form') || box.parentElement;
+    if (!form) return;
+
+    // The row holding the gift, GIF, sticker and emoji buttons.
+    var row = form.querySelector('[class*="buttons"]');
+    if (!row || row.querySelector('.' + BUTTON_CLASS)) return;
+
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = BUTTON_CLASS;
+    button.setAttribute('aria-label', 'Translate and send');
+    button.innerHTML =
+      '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+      '<path d="M12.87 15.07l-2.54-2.51.03-.03A17.5 17.5 0 0014.07 6H17V4h-7V2H8v2H1v2h11.17A15.4 15.4 0 019.5 11.2 15.9 15.9 0 017.4 8H5.4a17.9 17.9 0 002.8 4.5l-3.4 3.4L6.2 17.3l3.4-3.4 2.1 2.1.77-2.03zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>' +
+      '</svg>';
+
+    button.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      translateAndSend(box, true);
+    });
+
+    row.insertBefore(button, row.firstChild);
+    refreshComposerButton();
+  }
+
+  function refreshComposerButton() {
+    var button = document.querySelector('.' + BUTTON_CLASS);
+    if (!button) return;
+    var name = settings.outgoingTarget.toUpperCase();
+    button.title = 'Translate and send in ' + name;
+    button.dataset.dtLang = name;
+  }
+
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Enter' || e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) return;
     if (e.isComposing || e.keyCode === 229) return;          // IME still composing
@@ -326,22 +413,7 @@
     e.stopPropagation();
     e.stopImmediatePropagation();
 
-    box.dataset.dtBusy = '1';
-    // If the user types their language in Latin letters, it is put back into
-    // its own script before translating — otherwise "vai dam koto ekhon" gets
-    // read as Vietnamese.
-    var romanizeFrom = settings.romanized ? settings.romanizedLang : null;
-
-    translate(text, settings.outgoingTarget, romanizeFrom).then(function (res) {
-      delete box.dataset.dtBusy;
-      var out = res && res.text ? res.text : text;            // on failure, send what was typed
-      if (out !== text) replaceComposerText(box, out);
-      if (settings.outgoingMode === 'send') {
-        pressEnter(box);
-      } else {
-        box.dataset.dtDone = out;                             // next Enter just sends it
-      }
-    });
+    translateAndSend(box, false);
   }, true);
 
   // ------------------------------------------------------------------- wiring
@@ -350,6 +422,8 @@
     document.documentElement.setAttribute('data-dt-badge', settings.showBadge ? '1' : '0');
 
     var next = scopeAllows();
+    refreshComposerButton();
+
     if (next === active) {
       if (active) scheduleScan();
       return;
@@ -360,9 +434,12 @@
         childList: true, subtree: true, characterData: true
       });
       scan(document);
+      ensureComposerButton();
     } else {
       observer.disconnect();
       revertAll();
+      var button = document.querySelector('.' + BUTTON_CLASS);
+      if (button) button.remove();
     }
   }
 

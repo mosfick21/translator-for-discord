@@ -29,7 +29,10 @@
   a { color: #00a8fc; text-decoration: none; }
   .emoji { width: 22px; height: 22px; vertical-align: -5px; }
   .composer { margin: 16px; padding: 12px 16px; background: #383a40; border-radius: 8px; }
-  .composer [role="textbox"] { outline: none; min-height: 22px; }
+  .composer { display: flex; align-items: center; gap: 8px; }
+  .composer [role="textbox"] { outline: none; min-height: 22px; flex: 1; }
+  .buttons_f9f2ca { display: flex; align-items: center; gap: 4px; }
+  .attachButton { background: none; border: none; color: #b5bac1; cursor: pointer; font-size: 12px; }
   .embed { margin-top: 6px; padding: 10px 14px; border-left: 4px solid #5865f2;
            background: #2b2d31; border-radius: 4px; max-width: 440px; }
   .embedTitle { color: #00a8fc; font-weight: 600; margin-bottom: 4px; }
@@ -82,12 +85,25 @@
       </div>
     </div>
   </li>
+
+  <li id="chat-messages-1007">
+    <div class="contents_f9f2ca">
+      <div class="avatar"></div>
+      <h3><span class="username">Grace</span><span class="timestamp">Today at 10:14</span></h3>
+      <div id="message-content-1007" class="markup_a7e664 messageContent_f9f2ca">welcome <span class="username_c19a55">montytran</span>, glad you made it</div>
+    </div>
+  </li>
 </ol>
 
-<div class="composer">
+<form class="composer">
   <div role="textbox" data-slate-editor="true" contenteditable="true"
        class="slateTextArea_a552a6" data-placeholder="Message #general">vai dam koto ekhon</div>
-</div>
+  <div class="buttons_f9f2ca">
+    <button type="button" class="attachButton">gift</button>
+    <button type="button" class="attachButton">GIF</button>
+    <button type="button" class="attachButton">emoji</button>
+  </div>
+</form>
 
 <script>
   // Discord re-renders constantly; this checks the observer survives it.
