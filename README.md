@@ -4,11 +4,11 @@
 
 # Translator for Discord
 
-**Read every Discord message in your own language. Send yours in theirs.**
+**For the channels you cannot read.**
 
 ![Manifest](https://img.shields.io/badge/manifest-v3-5865F2)
 ![Languages](https://img.shields.io/badge/languages-45-5865F2)
-![Backends](https://img.shields.io/badge/backends-5%20keyless-23a55a)
+![No key](https://img.shields.io/badge/API%20key-none-23a55a)
 ![Dictionary](https://img.shields.io/badge/dictionary-364k%20words-23a55a)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -16,44 +16,56 @@
 
 ---
 
-| | |
-|---|---|
-| **Setup** | None. No account, no API key |
-| **Translator** | Bing, with silent fallbacks. No key, no account |
-| **Languages** | 45 to read and write, 17 typeable in Latin letters |
-| **Scope** | All of Discord, one server, or one channel |
-| **Untouched** | Bot commands, links, mentions, emoji, code |
+## The problem
+
+A big Discord server is not one language. It is `#indonesia`, `#japan`,
+`#arabic`, `#india`, `#pakistan`, `#brasil`, `#türkiye` — and the half of the
+server you cannot read is usually the half that knows something first.
+
+English is the easy part. Everyone already has that. What nobody has is the
+Indonesian channel where the drop got called an hour early, or the Japanese one
+where somebody already worked the bug out.
+
+This makes those channels readable, and lets you answer in them.
+
+```diff
+  #indonesia
+- turu dulu kawan, besok lanjut lagi
++ প্রথমে ঘুমাও বন্ধু, কাল আবার চালিয়ে যাবে
+
+  #japan
+- 今日のイベント何時から始まりますか
++ আজকের ইভেন্ট কখন থেকে শুরু হবে?
+
+  #arabic
+- هل يعرف أحد متى يبدأ الحدث
++ কারও কি জানা আছে ঘটনা কখন শুরু হবে
+
+  #turkiye
+- etkinlik saat kacta basliyor acaba
++ কার্যক্রমটি কখন শুরু হচ্ছে কি?
+```
+
+Messages are rewritten **where they sit**. Nothing moves, nothing is added, and
+you read the channel the way everyone else in it does.
 
 ---
 
-## What it does
+## Answering back
 
-Messages are rewritten where they sit. Nothing moves.
-
-```diff
-- welcome to the server, glad you made it
-+ সার্ভারে স্বাগতম, খুশি হলাম তুমি এসেছো
-```
-
-And the other way round. Enter always sends exactly what you typed; the
-translate button in the message box is what translates:
+You are not only reading. Type in your own language, press the translate button
+in the message box, and it leaves in theirs.
 
 ```diff
-- vai dam koto ekhon
-+ Brother, how much is the price now?
+- bhai event ta kokhon shuru hobe
++ Kakak, acara itu akan mulai kapan?            #indonesia
++ 兄さん、そのイベントはいつ始まりますか          #japan
 ```
 
-That second one is Bengali typed on an English keyboard. Hindi, Arabic and
-fifteen others work the same way.
-
-| Also | |
-|---|---|
-| Any source language | Detected per message, or pin it to one |
-| Internet words | *fomo*, *chill*, *skibidi* stay as they are |
-| Shorthand | `brb`, `gtg`, `ttyl` translate to what they mean |
-| Bot commands | `/ban`, `!verify` go through byte for byte |
-| Links, mentions, code | Never touched |
-| Names | Never translated |
+That is Bengali typed on an English keyboard. Banglish, Hinglish, Urdish,
+Arabizi and thirteen more work the same way, with nothing to switch on — the
+extension works out that these are Latin letters standing in for another
+script, and puts it back before translating.
 
 ---
 
@@ -62,11 +74,13 @@ fifteen others work the same way.
 ```
 1.  Code → Download ZIP, unzip somewhere permanent
 2.  chrome://extensions  →  Developer mode  →  Load unpacked
-3.  Open Discord, click the icon, pick a language
+3.  Open Discord, click the icon, pick your language
 ```
 
 Chrome · Edge · Brave · Opera. Firefox needs
 [one line changed](ARCHITECTURE.md).
+
+No account, no sign-up, no API key. Nothing to pay for, nothing to set up.
 
 ---
 
@@ -78,15 +92,47 @@ Six, and that is the lot.
 |---|---|
 | **On / off** | Or `Alt+T` |
 | **Reading** | Translate everything, or only the message you point at |
-| **From → Into** | Detect each message, or pin the language the server speaks |
+| **From → Into** | Detect each message, or pin the language a channel speaks |
 | **Send as** | What the translate button in the message box sends in |
 | **Where it runs** | Everywhere, one server, or one channel |
 
 Nothing else is a setting, because nothing else has a second right answer.
-Internet words are always kept, the polite written register is always relaxed,
-embeds are always included, a message already in your language is always left
-alone, and text typed in Latin letters is put back into its own script when
-that is what it turns out to be.
+Internet words are always kept as they are, the polite written register is
+always relaxed into how people actually type, embeds are always included, and a
+message already in your language is always left alone.
+
+---
+
+## What it gets right that a plain translator does not
+
+**Chat is not prose.** `ngl this is fire` means *honestly, this is great*, not
+*I won't lie, this fire*. `wen mint?` is a question about timing, not the word
+*when* misspelled into nonsense.
+
+**Some words should not be translated at all.** Every language just says *fomo*.
+The extension carries a dictionary of 364,000 English words in 356 KB — a Latin
+word it does not recognise was invented by the internet, so it is held back and
+put straight back afterwards. Words nobody has ever listed work the first time
+they turn up.
+
+```diff
+- fomo is real rn, everyone aping in
++ fomo এখন সত্যি, সবাই এতে যোগ দিচ্ছে
+
+- this is so skibidi ngl
++ এটা সত্যিই skibidi, সত্যি কথা বলতে
+```
+
+**Names are names.** A username in a reply preview is not a word to translate.
+
+**Bot commands still work.** `/ban`, `!verify` and `?help` go through byte for
+byte, as do links, mentions, custom emoji, code blocks and spoilers.
+
+**Enter is still Enter.** It sends exactly what you typed. Translating is
+something you press a button to do, so nothing ever leaves in a language you did
+not ask for.
+
+---
 
 ## Languages
 
@@ -110,6 +156,8 @@ that is what it turns out to be.
 | 🇩🇰 **Danish** Dansk | 🇫🇮 **Finnish** Suomi | 🇨🇿 **Czech** Čeština |
 | 🇷🇴 **Romanian** Română | 🇭🇺 **Hungarian** Magyar | 🇬🇷 **Greek** Ελληνικά ⌨️ |
 
+Any of the 45 can be read from, sent to, or both.
+
 ---
 
 ## How it works
@@ -120,24 +168,25 @@ that is what it turns out to be.
 
 </div>
 
-One translator, no key, nothing to sign up for. Bing is the only keyless
-service that reads casual writing the way a person does — Google and MyMemory
-render word for word, DeepL has no Bengali and rate-limits without a key, and
+One translator, no key, nothing to sign up for. Bing is the only keyless service
+that reads casual writing the way a person does — Google and MyMemory render
+word for word, DeepL answers 429 without a key and has no Bengali at all, and
 every public LibreTranslate instance is now gone or key-gated. The others stay
 in the chain so that a Bing outage is not an outage here, but there is nothing
 to choose.
 
-Internals in **[ARCHITECTURE.md](ARCHITECTURE.md)** — pipeline order, dictionary
-format, how React is survived, known limits.
+Internals in **[ARCHITECTURE.md](ARCHITECTURE.md)** — the pipeline, the
+dictionary format, how React is survived, known limits.
 
 ---
 
 ## Privacy
 
-Message text goes to the backend you chose and nowhere else. No cookies, no
-account, no logging, no analytics. Settings stay in your browser.
+Message text goes to the translation service and nowhere else. No cookies, no
+account, no logging, no analytics. Your six settings stay in your browser.
 
-Keep it off the network entirely:
+For nothing to leave your network at all, run LibreTranslate yourself and point
+the extension at it in `src/background.js`:
 
 ```bash
 docker run -p 5000:5000 libretranslate/libretranslate
@@ -150,7 +199,8 @@ docker run -p 5000:5000 libretranslate/libretranslate
 ```bash
 npm run serve                                              # mock Discord page
 chrome --headless=new --remote-debugging-port=9222 about:blank
-npm test                                                   # 8 DOM checks
+npm test                                                   # DOM checks
+DT_MODE=tap npm test                                       # the other reading mode
 npm run build:dictionary                                   # rebuild the filter
 ```
 
@@ -159,8 +209,8 @@ npm run build:dictionary                                   # rebuild the filter
 | A language | `DT_LANGUAGES` in `src/common.js` |
 | A word that stays untranslated | `DT_KEEP_WORDS` in `src/slang.js` |
 | A chat spelling | `DT_RESPELL` in `src/slang.js` |
-| Tone rules | `DT_TONE` in `src/tone.js` |
-| A backend | `PROVIDERS` in `src/background.js` |
+| Tone rules for a language | `DT_TONE` in `src/tone.js` |
+| A translation backend | `PROVIDERS` in `src/background.js` |
 
 Issues and pull requests welcome.
 
