@@ -148,3 +148,20 @@ div[role="textbox"][data-dt-busy="1"] {
    because it is a bare icon rather than a whole mascot. */
 .dt-btn-art { background-size: 26px; }
 .dt-btn-message.dt-btn-art { background-size: 22px; }
+
+/* What the send button is doing. Silence is the one thing a button must not
+   do, so every outcome shows for a moment. */
+.dt-btn[data-dt-state="busy"] {
+  opacity: 1;
+  animation: dt-pulse 900ms ease-in-out infinite;
+}
+
+.dt-btn[data-dt-state="ok"]   { background-color: #23a55a; opacity: 1; }
+.dt-btn[data-dt-state="fail"] { background-color: #f23f43; opacity: 1; }
+.dt-btn[data-dt-state="same"],
+.dt-btn[data-dt-state="skip"] { background-color: #5865f2; opacity: 1; }
+
+@keyframes dt-pulse {
+  0%, 100% { opacity: .45; }
+  50%      { opacity: 1; }
+}

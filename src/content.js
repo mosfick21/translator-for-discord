@@ -238,9 +238,8 @@
      real click, a real hover, and a real icon. */
 
   var layer = null;
-  var messageButton = null;
   var composerButton = null;
-  var hovered = null;          // the message the pointer is over
+  var pool = [];               // one message button per message on screen
 
   var ICON = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">' +
@@ -277,17 +276,6 @@
     layer = document.createElement('div');
     layer.className = 'dt-layer';
 
-    messageButton = makeButton('dt-btn dt-btn-message', 'Translate this message', 'icon-translate.png');
-    messageButton.addEventListener('mousedown', function (e) {
-      // mousedown rather than click: Discord closes hover state on mouseup.
-      e.preventDefault();
-      e.stopPropagation();
-      if (!hovered) return;
-      hovered.setAttribute('data-dt-working', '1');
-      handleBlock(hovered, true);
-      hideMessageButton();
-    });
-
     composerButton = makeButton('dt-btn dt-btn-send', 'Translate and send', 'icon-send.png');
     composerButton.addEventListener('mousedown', function (e) {
       e.preventDefault();
@@ -296,43 +284,61 @@
       if (box) translateAndSend(box);
     });
 
-    layer.appendChild(messageButton);
     layer.appendChild(composerButton);
     document.body.appendChild(layer);
+    pool.length = 0;
   }
 
-  function hideMessageButton() {
-    hovered = null;
-    if (messageButton) messageButton.style.display = 'none';
+  function newMessageButton() {
+    var b = makeButton('dt-btn dt-btn-message', 'Translate this message', 'icon-translate.png');
+    b.addEventListener('mousedown', function (e) {
+      // mousedown rather than click: Discord tears the hover state down on mouseup.
+      e.preventDefault();
+      e.stopPropagation();
+      var host = b.dtTarget;
+      if (!host || !host.isConnected) return;
+      host.setAttribute('data-dt-working', '1');
+      handleBlock(host, true);
+      b.style.display = 'none';
+    });
+    layer.appendChild(b);
+    return b;
   }
 
-  /* The message button follows the pointer from message to message. It is only
-     offered in tap mode; in auto mode the message is already translated. */
-  document.addEventListener('mouseover', function (e) {
-    if (!active || settings.mode !== 'tap' || !e.target.closest) return;
-
-    var host = e.target.closest(MESSAGE_CONTENT);
-    if (!host || host.hasAttribute('data-dt-translated')) {
-      if (!e.target.closest('.dt-btn')) hideMessageButton();
+  /* A button for every message on screen that has not been translated yet.
+     They sit to the right of the text, inside the column, so they never land on
+     the avatars or outside the chat area. */
+  function placeMessageButtons() {
+    if (settings.mode !== 'tap') {
+      for (var h = 0; h < pool.length; h++) pool[h].style.display = 'none';
       return;
     }
 
-    ensureLayer();
-    hovered = host;
-    placeMessageButton();
-  }, true);
+    var nodes = document.querySelectorAll(MESSAGE_CONTENT);
+    var shown = 0;
 
-  function placeMessageButton() {
-    if (!hovered || !hovered.isConnected) return hideMessageButton();
+    for (var i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      if (el.hasAttribute('data-dt-translated')) continue;
 
-    var box = hovered.getBoundingClientRect();
-    // The gutter left of the text, where Discord shows the avatar column.
-    var left = box.left - 30;
-    if (left < 8) left = box.right + 6;          // no room: sit after the text
+      var r = el.getBoundingClientRect();
+      if (!r.width || r.bottom < 0 || r.top > window.innerHeight) continue;
 
-    messageButton.style.display = 'block';
-    messageButton.style.left = Math.round(left) + 'px';
-    messageButton.style.top = Math.round(box.top) + 'px';
+      // Keep it inside the message column rather than wherever the text ends.
+      var row = el.closest('li') || el.parentElement;
+      var limit = row ? row.getBoundingClientRect().right - 32 : r.right + 6;
+      var left = Math.min(r.right + 8, limit);
+      if (left < r.left) left = r.left;
+
+      var btn = pool[shown] || (pool[shown] = newMessageButton());
+      btn.dtTarget = el;
+      btn.style.display = 'block';
+      btn.style.left = Math.round(left) + 'px';
+      btn.style.top = Math.round(r.top) + 'px';
+      shown++;
+    }
+
+    for (var j = shown; j < pool.length; j++) pool[j].style.display = 'none';
   }
 
   /* The send button sits just left of Discord's own composer buttons. */
@@ -375,8 +381,7 @@
     ensureLayer();
     layer.style.display = '';
     placeComposerButton();
-    if (hovered) placeMessageButton();
-    if (settings.mode !== 'tap') hideMessageButton();
+    placeMessageButtons();
   }
 
   /* Anything that moves the page moves the buttons with it — but measuring on
@@ -484,15 +489,33 @@
            target.closest('div[role="textbox"]');
   }
 
+  /* Getting text into the composer is the one part that cannot be done the
+     obvious way: it is a Slate editor, so its value is held in JavaScript and
+     assigning to the DOM changes nothing that gets sent.
+
+     execCommand is deprecated and still the only thing that works, because it
+     raises the same beforeinput/input events a keystroke does, which is what
+     Slate listens to. Two ways of selecting first, because selectAll is refused
+     in some builds and a Range is ignored in others.
+
+     Returns whether the box actually ended up holding the text. */
   function replaceComposerText(box, text) {
     box.focus();
+
+    var sel = window.getSelection();
     var range = document.createRange();
     range.selectNodeContents(box);
-    var sel = window.getSelection();
     sel.removeAllRanges();
     sel.addRange(range);
-    // execCommand fires the beforeinput/input events Slate needs to stay in sync.
+
     document.execCommand('insertText', false, text);
+    if ((box.textContent || '').trim() === text.trim()) return true;
+
+    // Second attempt: let the browser work out the selection itself.
+    box.focus();
+    document.execCommand('selectAll', false, null);
+    document.execCommand('insertText', false, text);
+    return (box.textContent || '').trim() === text.trim();
   }
 
   function pressEnter(box) {
@@ -508,20 +531,44 @@
   /* Translate whatever is in the box and send it. Only the button does this —
      Enter is left alone, so a message is never sent in a language the user did
      not deliberately ask for. */
+  /* Flash the button so the outcome is never silent. Nothing happening and
+     something failing look identical otherwise, which is the worst way for a
+     button to behave. */
+  function flash(state) {
+    if (!composerButton) return;
+    composerButton.dataset.dtState = state;
+    setTimeout(function () { delete composerButton.dataset.dtState; }, 1400);
+  }
+
   function translateAndSend(box) {
     var text = (box.textContent || '').trim();
-    if (!text || looksLikeCommand(text) || box.dataset.dtBusy === '1') return;
+    if (!text || box.dataset.dtBusy === '1') return;
+    if (looksLikeCommand(text)) { flash('skip'); return; }
 
     box.dataset.dtBusy = '1';
+    if (composerButton) composerButton.dataset.dtState = 'busy';
+
     // If this turns out to be the user's own language typed in Latin letters,
     // it is put back into its own script first — otherwise "vai dam koto ekhon"
     // reads as Vietnamese. The worker decides whether that applies.
     translate(text, settings.outgoingTarget, null, settings.target)
       .then(function (res) {
         delete box.dataset.dtBusy;
-        var out = res && res.text ? res.text : text;   // on failure, send what was typed
-        if (out !== text) replaceComposerText(box, out);
 
+        if (!res || !res.text) { flash('fail'); return; }
+        if (res.text.trim() === text) { flash('same'); return; }
+
+        if (!replaceComposerText(box, res.text)) {
+          // The text is still the user's own, so nothing is sent — pressing
+          // Enter now would post the untranslated message.
+          flash('fail');
+          return;
+        }
+
+        flash('ok');
+        // Slate has the translation; ask Discord to send it. If the synthetic
+        // key is ignored the translation is still sitting in the box, so the
+        // user only has to press Enter.
         pressEnter(box);
       });
   }

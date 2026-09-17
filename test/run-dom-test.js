@@ -112,6 +112,17 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await send('Page.navigate', { url: PAGE_URL });
   await sleep(6000);   // let the observer settle and the late message arrive
 
+  // Exercise the send button: it has to get the translation into the composer,
+  // which is the step that cannot be checked any other way.
+  const before = 'vai dam koto ekhon';
+  await send('Runtime.evaluate', {
+    expression: `(function () {
+      var b = document.querySelector('.dt-btn-send');
+      if (b) b.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    })()`
+  });
+  await sleep(900);
+
   const { result } = await send('Runtime.evaluate', {
     returnByValue: true,
     expression: `(function () {
@@ -130,16 +141,16 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       // Both buttons live in our own layer, outside Discord's tree.
       var layer = document.querySelector('.dt-layer');
       var send = document.querySelector('.dt-btn-send');
-      var msgBtn = document.querySelector('.dt-btn-message');
-
-      // Hovering a message is what offers its button, so do that.
-      var first = document.querySelector('[id^="message-content-"]');
-      if (first) {
-        first.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
-      }
-      var msgShown = msgBtn && getComputedStyle(msgBtn).display !== 'none';
+      // A button sits on every untranslated message on screen, with no hover.
+      var msgButtons = [].filter.call(
+        document.querySelectorAll('.dt-btn-message'),
+        function (b) { return getComputedStyle(b).display !== 'none'; });
+      var firstMsg = document.querySelector('[id^="message-content-"]');
+      var toTheRight = msgButtons.length && firstMsg &&
+        parseInt(msgButtons[0].style.left, 10) > firstMsg.getBoundingClientRect().left;
       var embed = document.querySelector('[class*="embedDescription"]');
       var box = document.querySelector('div[role="textbox"]');
+      var sendState = send && send.dataset.dtState;
       return {
         messages: out,
         embed: embed && embed.textContent.trim(),
@@ -149,7 +160,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
           lang: send.dataset.dtLang,
           shown: getComputedStyle(send).display !== 'none'
         } : null,
-        messageButtonShown: !!msgShown
+        sendState: sendState || null,
+        messageButtons: msgButtons.length,
+        messageButtonsOnTheRight: !!toTheRight
       };
     })()`
   });
@@ -174,8 +187,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     check(data.messages.every((m) => !m.marked), 'nothing was translated on its own');
     check(byId['1001'] && byId['1001'].text === 'ngl this is fire',
           'the text is exactly as it was posted', byId['1001'] && byId['1001'].text);
-    check(data.messageButtonShown, 'hovering a message offers its translate button');
+    check(data.messageButtons >= 5, 'every message on screen has its own button',
+          data.messageButtons + ' shown');
+    check(data.messageButtonsOnTheRight, 'they sit to the right of the text');
     check(!!data.sendButton && data.sendButton.shown, 'the send button is on screen');
+    check(data.composer !== before, 'pressing it put the translation in the composer',
+          data.composer);
     check(data.layerOutsideReact, 'the buttons sit outside the app tree');
     console.log(`\n${failures ? failures + ' check(s) failed' : 'all checks passed'}\n`);
     ws.close();
@@ -203,8 +220,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   check(!!data.sendButton && data.sendButton.shown, 'the send button is on screen');
   check(!!data.sendButton && data.sendButton.lang === 'EN',
         'it shows the language it will send in', data.sendButton && data.sendButton.lang);
-  check(!data.messageButtonShown,
-        'no per-message button while everything translates on its own');
+  check(data.composer !== before, 'pressing it put the translation in the composer',
+        data.composer);
+  check(data.messageButtons === 0,
+        'no per-message buttons while everything translates on its own');
 
   console.log(`\n${failures ? failures + ' check(s) failed' : 'all checks passed'}\n`);
   ws.close();
