@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Discord Translator",
+  "name": "Translator for Discord",
   "version": "1.0.0",
   "description": "Translate Discord messages in place, instantly. Choose your language and whether it applies to one channel, one server, or all of Discord.",
   "icons": {
@@ -62,5 +62,16 @@
       },
       "description": "Turn translation on or off"
     }
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/dictionary.bin"
+      ],
+      "matches": [
+        "https://discord.com/*"
+      ]
+    }
+  ],
+  "author": "mosfick"
 }

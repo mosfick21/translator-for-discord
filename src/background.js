@@ -4,7 +4,7 @@
    Nothing below needs an API key. When a backend is down or rate-limits, the
    next one in the chain is tried instead. */
 
-importScripts('slang.js', 'tone.js');
+importScripts('dictionary.js', 'slang.js', 'tone.js');
 
 const MAX_CHARS = 4500;       // the free endpoints start failing past ~5k
 const MAX_ATTEMPTS = 2;       // per provider, before moving to the next one
@@ -388,6 +388,7 @@ async function translate(text, target, source, romanizeFrom) {
   if (!raw.trim()) return { text: text, detected: null };
 
   const config = await chrome.storage.sync.get(DEFAULTS);
+  if (config.keepSlang) await dtDictionaryReady();
 
   const key = `${config.engine}|${source || 'auto'}|${target}|${romanizeFrom || ''}|${raw}`;
   const hit = cacheGet(key);

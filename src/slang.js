@@ -211,10 +211,23 @@ var DT_KEEP_RE = new RegExp(
  */
 function dtProtect(text) {
   var kept = [];
+
   var masked = String(text || '').replace(DT_KEEP_RE, function (match) {
     kept.push(match);
     return '{' + kept.length + '}';
   });
+
+  /* The list above only covers words that are also ordinary English — chill,
+     vibe, floor, gas. Everything the internet invents is caught by the
+     dictionary instead: a Latin word no dictionary knows is one no translator
+     will render well. That is what makes this work for words nobody has added
+     yet. */
+  masked = masked.replace(/(?<![\p{L}\p{N}_{])[a-zA-Z]{3,16}(?![\p{L}\p{N}_}])/gu, function (word) {
+    if (dtIsRealWord(word)) return word;
+    kept.push(word);
+    return '{' + kept.length + '}';
+  });
+
   return { text: masked, kept: kept };
 }
 

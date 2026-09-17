@@ -1,12 +1,20 @@
 {
-  "name": "discord-translator",
+  "name": "translator-for-discord",
   "version": "1.0.0",
   "description": "Browser extension that translates Discord messages in place, in both directions, with no account and no API key.",
   "private": true,
   "license": "MIT",
   "scripts": {
     "serve": "node test/serve.js 8899",
-    "test": "node test/run-dom-test.js"
+    "test": "node test/run-dom-test.js",
+    "build:dictionary": "node tools/build-dictionary.js"
   },
-  "keywords": ["discord", "translation", "browser-extension", "chrome-extension", "manifest-v3"]
+  "keywords": [
+    "discord",
+    "translation",
+    "browser-extension",
+    "chrome-extension",
+    "manifest-v3"
+  ],
+  "author": "mosfick"
 }
