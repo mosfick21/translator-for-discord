@@ -1,0 +1,56 @@
+/* Styling for translated messages. Everything uses Discord's own CSS variables
+   so it follows light/dark theme and any custom theme the user has on. */
+
+/* The little marker after a translated message. */
+html[data-dt-badge="1"] [data-dt-translated]::after {
+  content: "translated";
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 4px;
+  border-radius: 3px;
+  vertical-align: middle;
+
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 14px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+
+  color: var(--text-muted, #949ba4);
+  background: var(--background-modifier-accent, rgba(148, 155, 164, 0.16));
+  opacity: 0.65;
+  user-select: none;
+  cursor: help;
+}
+
+html[data-dt-badge="1"] [data-dt-translated]:hover::after {
+  opacity: 1;
+}
+
+/* Alt+click a message to swap back to what was actually written.
+   font-size: 0 collapses the translated text nodes without touching the DOM,
+   which keeps React from noticing anything changed. */
+[data-dt-translated].dt-show-original {
+  font-size: 0 !important;
+}
+
+[data-dt-translated].dt-show-original::before {
+  content: attr(data-dt-original);
+  display: block;
+  font-size: 1rem;
+  line-height: 1.375rem;
+  white-space: pre-wrap;
+  color: var(--text-normal, #dbdee1);
+}
+
+html[data-dt-badge="1"] [data-dt-translated].dt-show-original::after {
+  content: "original";
+  font-size: 0.625rem;
+}
+
+/* While an outgoing message is being translated, dim the composer a touch so
+   the pause between Enter and send does not read as a dropped keystroke. */
+div[role="textbox"][data-dt-busy="1"] {
+  opacity: 0.55;
+  transition: opacity 80ms ease-out;
+}

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Discord Translator</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+
+  <header class="head">
+    <div class="head-text">
+      <h1>Discord Translator</h1>
+      <p id="status" class="status">Loading…</p>
+    </div>
+    <label class="switch" title="Turn everything on or off (Alt+T)">
+      <input type="checkbox" id="enabled">
+      <span class="track"></span>
+    </label>
+  </header>
+
+  <main id="body">
+
+    <section class="card">
+      <h2>Messages you read</h2>
+      <label class="field">
+        <span class="label">Translate everything into</span>
+        <select id="target"></select>
+      </label>
+      <label class="check">
+        <input type="checkbox" id="skipSameLanguage">
+        <span>Leave messages alone if they are already in that language</span>
+      </label>
+      <label class="check">
+        <input type="checkbox" id="translateEmbeds">
+        <span>Translate embeds too</span>
+      </label>
+      <label class="check">
+        <input type="checkbox" id="keepSlang">
+        <span>Keep internet words as they are (fomo, chill, wagmi)</span>
+      </label>
+      <label class="check">
+        <input type="checkbox" id="casual">
+        <span>Everyday wording, not the polite written form</span>
+      </label>
+      <label class="check">
+        <input type="checkbox" id="showBadge">
+        <span>Show a small "translated" marker</span>
+      </label>
+    </section>
+
+    <section class="card">
+      <h2>Messages you send</h2>
+      <label class="check">
+        <input type="checkbox" id="outgoingEnabled">
+        <span>Translate what I type before sending</span>
+      </label>
+      <div id="outgoingOptions">
+        <label class="field">
+          <span class="label">Send my messages in</span>
+          <select id="outgoingTarget"></select>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="romanized">
+          <span>I type my language in English letters (Banglish, Hinglish…)</span>
+        </label>
+        <label class="field" id="romanizedLangField">
+          <span class="label">The language I am really typing</span>
+          <select id="romanizedLang"></select>
+        </label>
+        <label class="field">
+          <span class="label">When I press Enter</span>
+          <select id="outgoingMode">
+            <option value="send">Translate and send it</option>
+            <option value="preview">Translate, let me check it first</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Translated by</h2>
+      <label class="field">
+        <select id="engine">
+          <option value="bing">Bing — understands slang and casual chat</option>
+          <option value="google">Google — fastest, but word for word</option>
+          <option value="mymemory">MyMemory — open API, daily limit</option>
+          <option value="libre">LibreTranslate — your own server</option>
+        </select>
+      </label>
+      <div id="libreOptions" class="hidden">
+        <label class="field">
+          <span class="label">Server address</span>
+          <input type="text" id="libreUrl" placeholder="http://localhost:5000" spellcheck="false">
+        </label>
+        <p class="hint">
+          Every public LibreTranslate instance now wants an API key, so run your own:
+          <code>docker run -p 5000:5000 libretranslate/libretranslate</code>
+        </p>
+      </div>
+      <p class="hint" id="engineHint">
+        None of these need an account or a key. If one stops responding, the next takes over.
+      </p>
+      <p class="hint" id="testLine"><a href="#" id="testBtn">Test it</a></p>
+    </section>
+
+    <section class="card">
+      <h2>Where it runs</h2>
+      <div class="scopes">
+        <label class="radio">
+          <input type="radio" name="scope" value="everywhere">
+          <span>
+            <strong>All of Discord</strong>
+            <em>Every server, every DM.</em>
+          </span>
+        </label>
+        <label class="radio">
+          <input type="radio" name="scope" value="server">
+          <span>
+            <strong>This server only</strong>
+            <em id="serverHint">—</em>
+          </span>
+        </label>
+        <label class="radio">
+          <input type="radio" name="scope" value="channel">
+          <span>
+            <strong>This channel only</strong>
+            <em id="channelHint">—</em>
+          </span>
+        </label>
+      </div>
+    </section>
+
+    <p class="foot">Alt+T toggles · Alt+click a message to see the original</p>
+  </main>
+
+  <script src="../src/common.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

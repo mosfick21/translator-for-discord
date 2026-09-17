@@ -1,0 +1,234 @@
+/* Discord's own palette and type scale, so the popup reads as part of the app. */
+
+:root {
+  --bg:            #313338;
+  --bg-raised:     #2b2d31;
+  --bg-input:      #1e1f22;
+  --bg-hover:      #35373c;
+  --border:        #3f4147;
+
+  --text:          #f2f3f5;
+  --text-normal:   #dbdee1;
+  --text-muted:    #949ba4;
+
+  --blurple:       #5865f2;
+  --blurple-hover: #4752c4;
+  --green:         #23a55a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  width: 340px;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text-normal);
+  font-family: "gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.35;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ------------------------------------------------------------------- header */
+.head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--border);
+}
+
+.head-text { flex: 1; min-width: 0; }
+
+.head h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.status {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status.on  { color: var(--green); }
+
+/* --------------------------------------------------------- the on/off switch */
+.switch { position: relative; flex: none; cursor: pointer; }
+.switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+
+.switch .track {
+  display: block;
+  width: 40px;
+  height: 24px;
+  border-radius: 12px;
+  background: #80848e;
+  transition: background 150ms ease;
+}
+
+.switch .track::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 150ms ease;
+}
+
+.switch input:checked + .track { background: var(--green); }
+.switch input:checked + .track::after { transform: translateX(16px); }
+.switch input:focus-visible + .track { box-shadow: 0 0 0 2px var(--blurple); }
+
+/* -------------------------------------------------------------------- cards */
+main { padding: 12px; }
+
+main.off { opacity: 0.4; pointer-events: none; }
+
+.card {
+  padding: 12px;
+  margin-bottom: 8px;
+  background: var(--bg-raised);
+  border-radius: 8px;
+}
+
+.card h2 {
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------------- fields */
+.field { display: block; margin-bottom: 10px; }
+.field:last-child { margin-bottom: 0; }
+
+.label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+select, input[type="password"], input[type="text"] {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--bg-input);
+  color: var(--text-normal);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+input[type="password"], input[type="text"] { cursor: text; }
+
+select:focus, input:focus {
+  outline: none;
+  border-color: var(--blurple);
+}
+
+/* ---------------------------------------------------------------- checkboxes */
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 5px 0;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-normal);
+}
+
+.check input, .radio input {
+  flex: none;
+  margin: 1px 0 0;
+  width: 15px;
+  height: 15px;
+  accent-color: var(--blurple);
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------------------- scope */
+.scopes { display: flex; flex-direction: column; gap: 2px; }
+
+.radio {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.radio:hover { background: var(--bg-hover); }
+
+.radio strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-normal);
+}
+
+.radio em {
+  display: block;
+  margin-top: 1px;
+  font-size: 12px;
+  font-style: normal;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.radio.disabled { opacity: 0.45; cursor: not-allowed; }
+.radio.disabled input { cursor: not-allowed; }
+
+/* ------------------------------------------------------------- disclosure bits */
+#outgoingOptions, #libreOptions {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.hidden { display: none !important; }
+
+.hint code {
+  padding: 1px 4px;
+  background: var(--bg-input);
+  border-radius: 3px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 10px;
+  word-break: break-all;
+}
+
+.hint.ok   { color: var(--green); }
+.hint.fail { color: #f23f43; }
+
+.hint {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.hint a { color: #00a8fc; text-decoration: none; }
+.hint a:hover { text-decoration: underline; }
+
+.foot {
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+}

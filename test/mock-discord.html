@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mock Discord</title>
+<!--
+  A stand-in for Discord's message list, close enough in structure that the
+  content script cannot tell the difference: the same element ids, the same
+  hashed-looking class names, and the same mix of mentions, links, code and
+  emoji that must survive untranslated.
+
+  Serve it over http (see test/serve.js) and load the extension against it —
+  that exercises the whole content script without needing a Discord account.
+-->
+<style>
+  body { margin: 0; background: #313338; color: #dbdee1;
+         font-family: "gg sans", "Noto Sans", Helvetica, Arial, sans-serif; font-size: 16px; }
+  ol { list-style: none; margin: 0; padding: 16px; }
+  li { padding: 6px 0 6px 56px; position: relative; min-height: 40px; }
+  .avatar { position: absolute; left: 0; top: 4px; width: 40px; height: 40px;
+            border-radius: 50%; background: #5865f2; }
+  h3 { margin: 0 0 2px; font-size: 16px; font-weight: 500; }
+  .username { color: #f2f3f5; margin-right: 8px; }
+  .timestamp { color: #949ba4; font-size: 12px; font-weight: 400; }
+  .messageContent { line-height: 1.375rem; }
+  .mention { background: rgba(88,101,242,.3); color: #c9cdfb; border-radius: 3px; padding: 0 2px; }
+  .inlineCode { background: #1e1f22; border-radius: 4px; padding: 1px 4px;
+                font-family: Consolas, monospace; font-size: 14px; }
+  a { color: #00a8fc; text-decoration: none; }
+  .emoji { width: 22px; height: 22px; vertical-align: -5px; }
+  .composer { margin: 16px; padding: 12px 16px; background: #383a40; border-radius: 8px; }
+  .composer [role="textbox"] { outline: none; min-height: 22px; }
+  .embed { margin-top: 6px; padding: 10px 14px; border-left: 4px solid #5865f2;
+           background: #2b2d31; border-radius: 4px; max-width: 440px; }
+  .embedTitle { color: #00a8fc; font-weight: 600; margin-bottom: 4px; }
+  .embedDescription { color: #dbdee1; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<ol data-list-id="chat-messages">
+  <li id="chat-messages-1001">
+    <div class="contents_f9f2ca">
+      <div class="avatar"></div>
+      <h3><span class="username">Alice</span><span class="timestamp">Today at 10:02</span></h3>
+      <div id="message-content-1001" class="markup_a7e664 messageContent_f9f2ca">ngl this is fire</div>
+    </div>
+  </li>
+
+  <li id="chat-messages-1002">
+    <div class="contents_f9f2ca">
+      <div class="avatar"></div>
+      <h3><span class="username">Bob</span><span class="timestamp">Today at 10:03</span></h3>
+      <div id="message-content-1002" class="markup_a7e664 messageContent_f9f2ca">gm frens, wen mint?</div>
+    </div>
+  </li>
+
+  <li id="chat-messages-1003">
+    <div class="contents_f9f2ca">
+      <div class="avatar"></div>
+      <h3><span class="username">Carol</span><span class="timestamp">Today at 10:05</span></h3>
+      <div id="message-content-1003" class="markup_a7e664 messageContent_f9f2ca">hey <span class="mention">@Alice</span> the floor price went up again, check <a href="https://opensea.io/x">https://opensea.io/x</a> when you can</div>
+    </div>
+  </li>
+
+  <li id="chat-messages-1004">
+    <div class="contents_f9f2ca">
+      <div class="avatar"></div>
+      <h3><span class="username">Dave</span><span class="timestamp">Today at 10:06</span></h3>
+      <div id="message-content-1004" class="markup_a7e664 messageContent_f9f2ca">run <code class="inlineCode">npm run build</code> first, otherwise nothing happens <img class="emoji" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Ccircle cx='11' cy='11' r='10' fill='%23f5c242'/%3E%3C/svg%3E" alt=":slight_smile:"></div>
+    </div>
+  </li>
+
+  <li id="chat-messages-1005">
+    <div class="contents_f9f2ca">
+      <div class="avatar"></div>
+      <h3><span class="username">Eve</span><span class="timestamp">Today at 10:08</span></h3>
+      <div id="message-content-1005" class="markup_a7e664 messageContent_f9f2ca">¿alguien sabe el precio ahora?</div>
+      <div class="embed">
+        <div class="embedTitle_b0068a">Collection statistics</div>
+        <div class="embedDescription_b0068a">The floor has moved twice in the last hour.</div>
+      </div>
+    </div>
+  </li>
+</ol>
+
+<div class="composer">
+  <div role="textbox" data-slate-editor="true" contenteditable="true"
+       class="slateTextArea_a552a6" data-placeholder="Message #general">vai dam koto ekhon</div>
+</div>
+
+<script>
+  // Discord re-renders constantly; this checks the observer survives it.
+  setTimeout(function () {
+    var li = document.createElement('li');
+    li.id = 'chat-messages-1006';
+    li.innerHTML = '<div class="contents_f9f2ca"><div class="avatar"></div>' +
+      '<h3><span class="username">Frank</span><span class="timestamp">Today at 10:11</span></h3>' +
+      '<div id="message-content-1006" class="markup_a7e664 messageContent_f9f2ca">' +
+      'lmao he got rugged, diamond hands my ass</div></div>';
+    document.querySelector('ol').appendChild(li);
+  }, 2500);
+</script>
+
+</body>
+</html>
