@@ -7,10 +7,10 @@
   var $ = function (id) { return document.getElementById(id); };
 
   var TOGGLES = ['enabled', 'skipSameLanguage', 'translateEmbeds', 'keepSlang',
-                 'casual', 'showBadge', 'outgoingEnabled', 'romanized'];
+                 'casual', 'showBadge', 'romanized'];
   var SELECTS = ['source', 'target', 'outgoingSource', 'outgoingTarget',
                  'engine', 'romanizedLang'];
-  var SEGMENTS = ['outgoingMode', 'scope'];
+  var SEGMENTS = ['mode', 'scope'];
 
   var here = { guildId: null, channelId: null };
 
@@ -58,14 +58,12 @@
     $('libreUrl').value = s.libreUrl || '';
 
     SEGMENTS.forEach(function (id) {
-      var value = id === 'scope' ? s.scope : s[id];
       [].forEach.call($(id).children, function (btn) {
-        btn.classList.toggle('on', btn.dataset.value === value);
+        btn.classList.toggle('on', btn.dataset.value === s[id]);
       });
     });
 
     $('body').classList.toggle('off', !s.enabled);
-    $('outgoingOptions').classList.toggle('hidden', !s.outgoingEnabled);
     $('romanizedLangField').classList.toggle('hidden', !s.romanized);
     $('libreOptions').classList.toggle('hidden', s.engine !== 'libre');
 
@@ -80,9 +78,8 @@
       status.classList.remove('on');
       return;
     }
-    var line = 'Reading in ' + shortName(s.target);
-    if (s.outgoingEnabled) line += ' · sending in ' + shortName(s.outgoingTarget);
-    status.textContent = line;
+    status.textContent = (s.mode === 'tap' ? 'Tap to translate · ' : '') +
+      shortName(s.target) + ' · sending in ' + shortName(s.outgoingTarget);
     status.classList.add('on');
   }
 
@@ -135,11 +132,11 @@
       savePartial('libreUrl', s.libreUrl);
     });
 
-    $('outgoingMode').addEventListener('click', function (e) {
+    $('mode').addEventListener('click', function (e) {
       var btn = e.target.closest('button');
       if (!btn) return;
-      s.outgoingMode = btn.dataset.value;
-      savePartial('outgoingMode', s.outgoingMode);
+      s.mode = btn.dataset.value;
+      savePartial('mode', s.mode);
       render(s);
     });
 

@@ -20,6 +20,48 @@
   line-height: 1.55em;
 }
 
+/* ───────────────────────────────────────────────── the translate-on-tap badge
+   Drawn as a pseudo-element so nothing is added to Discord's DOM. The offsets
+   here are read back by content.js to work out where the click landed, so the
+   two must stay in step: 20px wide, 6px clear of the message. */
+[data-dt-tap] { position: relative; }
+
+[data-dt-tap]::before {
+  content: "";
+  position: absolute;
+  left: -26px;
+  top: 1px;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--background-secondary-alt, #232428) center / 13px no-repeat
+    url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23b5bac1'%3E%3Cpath d='M12.87 15.07l-2.54-2.51.03-.03A17.5 17.5 0 0014.07 6H17V4h-7V2H8v2H1v2h11.17A15.4 15.4 0 019.5 11.2 15.9 15.9 0 017.4 8H5.4a17.9 17.9 0 002.8 4.5l-3.4 3.4L6.2 17.3l3.4-3.4 2.1 2.1.77-2.03zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z'/%3E%3C/svg%3E");
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 100ms ease;
+}
+
+/* Kept out of the way until the message is worth reading. */
+[data-dt-tap]:hover::before,
+li:hover [data-dt-tap]::before { opacity: .75; }
+[data-dt-tap]::before:hover { opacity: 1; }
+
+[data-dt-working]::before {
+  content: "";
+  position: absolute;
+  left: -26px;
+  top: 1px;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 2px solid var(--background-modifier-accent, #3f4147);
+  border-top-color: var(--text-muted, #949ba4);
+  box-sizing: border-box;
+  animation: dt-spin 700ms linear infinite;
+}
+
+@keyframes dt-spin { to { transform: rotate(360deg); } }
+
 /* The little marker after a translated message. */
 html[data-dt-badge="1"] [data-dt-translated]::after {
   content: "translated";

@@ -25,6 +25,11 @@
     <section class="card">
       <h2>Messages you read</h2>
 
+      <div class="segmented" id="mode">
+        <button type="button" data-value="auto">Translate everything</button>
+        <button type="button" data-value="tap">Only when I tap</button>
+      </div>
+
       <div class="pair">
         <label class="pair-side">
           <span class="pair-label">From</span>
@@ -80,13 +85,9 @@
     <section class="card">
       <h2>Messages you send</h2>
 
-      <label class="row row-lead">
-        <span class="row-text">
-          Translate what I type
-          <em>Before the message is sent</em>
-        </span>
-        <span class="mini"><input type="checkbox" id="outgoingEnabled"><span></span></span>
-      </label>
+      <p class="note">Enter sends exactly what you typed. The
+        <span class="note-icon"></span> button in the message box is what
+        translates.</p>
 
       <div id="outgoingOptions">
         <div class="pair">
@@ -114,13 +115,6 @@
           <select id="romanizedLang"></select>
         </label>
 
-        <div class="field">
-          <span class="label">When I press Enter</span>
-          <div class="segmented" id="outgoingMode">
-            <button type="button" data-value="send">Send it</button>
-            <button type="button" data-value="preview">Show me first</button>
-          </div>
-        </div>
       </div>
     </section>
 

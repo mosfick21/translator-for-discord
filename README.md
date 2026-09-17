@@ -35,8 +35,8 @@ Messages are rewritten where they sit. Nothing moves.
 + সার্ভারে স্বাগতম, খুশি হলাম তুমি এসেছো
 ```
 
-And the other way round — type in your language, press Enter, or click the
-translate button in the composer:
+And the other way round. Enter always sends exactly what you typed; the
+translate button in the message box is what translates:
 
 ```diff
 - vai dam koto ekhon
@@ -76,6 +76,7 @@ Chrome · Edge · Brave · Opera. Firefox needs
 
 | | |
 |---|---|
+| Reading | Translate everything, or only when you tap a message |
 | Translate into | 45 languages |
 | Skip same language | Leaves what you can already read |
 | Embeds | Bot embeds and link previews too |
@@ -86,9 +87,9 @@ Chrome · Edge · Brave · Opera. Firefox needs
 
 | | |
 |---|---|
-| Send in | The language your message goes out in |
+| Send as | The language the translate button sends in |
 | Latin letters | Banglish, Hinglish, Arabizi |
-| On Enter | Send it, or show the translation first |
+
 
 **Where**
 

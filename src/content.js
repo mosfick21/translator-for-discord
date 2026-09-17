@@ -207,6 +207,55 @@
     });
   }
 
+  /* ─────────────────────────────────────────────────────── translate on tap
+     In tap mode a message is left alone until its button is used. The button is
+     a pseudo-element on the message itself rather than an injected node —
+     React owns this subtree and removes anything it did not create, sometimes
+     taking the page down with it. A pseudo-element is invisible to React.
+
+     Because a pseudo-element cannot receive its own click, the handler works
+     out where it was drawn: the badge sits at a fixed offset from the message,
+     so its rectangle follows from the message's own. BADGE must match the
+     values in content.css. */
+  var BADGE = { size: 20, gap: 6 };
+
+  function markTappable(root) {
+    if (root.hasAttribute('data-dt-translated')) return;
+    root.setAttribute('data-dt-tap', '1');
+  }
+
+  function badgeRect(host) {
+    var box = host.getBoundingClientRect();
+    return {
+      left: box.left - BADGE.gap - BADGE.size,
+      top: box.top + 1,
+      right: box.left - BADGE.gap,
+      bottom: box.top + 1 + BADGE.size
+    };
+  }
+
+  document.addEventListener('click', function (e) {
+    if (!active || settings.mode !== 'tap') return;
+
+    var host = e.target.closest && e.target.closest('[data-dt-tap]');
+    if (!host) return;
+
+    var r = badgeRect(host);
+    if (e.clientX < r.left || e.clientX > r.right ||
+        e.clientY < r.top || e.clientY > r.bottom) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    host.removeAttribute('data-dt-tap');
+    host.setAttribute('data-dt-working', '1');
+    handleBlock(host, true);
+
+    // The attribute is only there to spin the badge; the translation itself
+    // clears it by marking the message translated.
+    setTimeout(function () { host.removeAttribute('data-dt-working'); }, 4000);
+  }, true);
+
   /* Bot commands have to survive byte for byte or they stop working: a slash
      command, or one of the prefixes bots use, followed immediately by a word.
      The letter right after the prefix is what separates "!verify" from "!!!"
@@ -218,8 +267,14 @@
     return COMMAND.test(text.trim());
   }
 
-  function handleBlock(root) {
+  function handleBlock(root, force) {
     if (looksLikeCommand(root.textContent || '')) return;
+
+    // On tap, a message waits for the button rather than translating itself.
+    if (settings.mode === 'tap' && !force) {
+      markTappable(root);
+      return;
+    }
 
     var nodes = collectTextNodes(root);
     if (!nodes.length) return;
@@ -288,8 +343,6 @@
   }, true);
 
   // -------------------------------------------------------- outgoing messages
-  var bypassNextEnter = false;
-
   function composerOf(target) {
     if (!target || !target.closest) return null;
     return target.closest('div[role="textbox"][data-slate-editor="true"]') ||
@@ -312,15 +365,15 @@
       key: 'Enter', code: 'Enter', keyCode: 13, which: 13,
       bubbles: true, cancelable: true, composed: true
     };
-    bypassNextEnter = true;
     box.dispatchEvent(new KeyboardEvent('keydown', init));
     box.dispatchEvent(new KeyboardEvent('keypress', init));
     box.dispatchEvent(new KeyboardEvent('keyup', init));
   }
 
-  /* Translate whatever is in the box and send it. Shared by the Enter handler
-     and the button in the composer. */
-  function translateAndSend(box, forceSend) {
+  /* Translate whatever is in the box and send it. Only the button does this —
+     Enter is left alone, so a message is never sent in a language the user did
+     not deliberately ask for. */
+  function translateAndSend(box) {
     var text = (box.textContent || '').trim();
     if (!text || looksLikeCommand(text) || box.dataset.dtBusy === '1') return;
 
@@ -336,8 +389,7 @@
         var out = res && res.text ? res.text : text;   // on failure, send what was typed
         if (out !== text) replaceComposerText(box, out);
 
-        if (forceSend || settings.outgoingMode === 'send') pressEnter(box);
-        else box.dataset.dtDone = out;                 // the next Enter just sends it
+        pressEnter(box);
       });
   }
 
@@ -373,7 +425,7 @@
     button.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
-      translateAndSend(box, true);
+      translateAndSend(box);
     });
 
     row.insertBefore(button, row.firstChild);
@@ -387,34 +439,6 @@
     button.title = 'Translate and send in ' + name;
     button.dataset.dtLang = name;
   }
-
-  document.addEventListener('keydown', function (e) {
-    if (e.key !== 'Enter' || e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) return;
-    if (e.isComposing || e.keyCode === 229) return;          // IME still composing
-    if (bypassNextEnter) { bypassNextEnter = false; return; }
-    if (!settings.enabled || !settings.outgoingEnabled || !scopeAllows()) return;
-
-    var box = composerOf(e.target);
-    if (!box) return;
-
-    var text = (box.textContent || '').trim();
-    if (!text) return;
-    if (looksLikeCommand(text)) return;                       // /ban, !verify, ?help
-    if (box.dataset.dtBusy === '1') return;                   // already working on it
-
-    // In preview mode the box now holds our own translation, and this Enter is
-    // the user approving it. Send it as it stands instead of translating twice.
-    if (box.dataset.dtDone === text) {
-      delete box.dataset.dtDone;
-      return;
-    }
-
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-
-    translateAndSend(box, false);
-  }, true);
 
   // ------------------------------------------------------------------- wiring
   function applyState() {

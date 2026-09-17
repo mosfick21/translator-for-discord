@@ -3,6 +3,10 @@
 
 var DT_DEFAULTS = {
   enabled: true,
+  // 'auto' translates every message as it arrives.
+  // 'tap'  leaves them alone and puts a button on each one instead, for when
+  //        only the occasional message needs translating.
+  mode: 'auto',
   // What you read: 'auto' lets each message be detected on its own, which is
   // right for a mixed channel. Naming a language is better when you know the
   // server speaks one and want to stop the detector guessing.
@@ -26,15 +30,15 @@ var DT_DEFAULTS = {
   // Every language just says these; translating them reads worse.
   keepSlang: true,
 
-  // --- Outgoing: what you type gets translated before it is sent ---
-  outgoingEnabled: false,
+  // --- Outgoing ---
+  // Enter always sends exactly what you typed. The button in the composer is
+  // what translates, so nothing is ever sent in a language you did not choose
+  // by pressing a key you meant for something else.
+  //
   // The language you write in. 'auto' works, but naming it is more reliable —
   // a short message is easy to misdetect.
   outgoingSource: 'auto',
   outgoingTarget: 'en',
-  // 'send'    -> translate, then send straight away
-  // 'preview' -> translate into the box and let you hit Enter yourself
-  outgoingMode: 'send',
   // Set this when you type your language in Latin letters — Banglish, Hinglish,
   // Arabizi. The text is put back into its own script before being translated,
   // because translators read "vai dam koto ekhon" as Vietnamese otherwise.

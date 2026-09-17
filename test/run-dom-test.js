@@ -22,8 +22,13 @@ const SRC = path.join(__dirname, '..', 'src');
 
 const read = (f) => fs.readFileSync(path.join(SRC, f), 'utf8');
 
+/* Run with DT_MODE=tap to check the other reading mode. */
+const MODE = process.env.DT_MODE === 'tap' ? 'tap' : 'auto';
+
 /* The chrome.* surface the content script touches, and nothing more. */
 const STUB = `
+var STORED = ${JSON.stringify({ mode: MODE })};
+` + `
 window.chrome = {
   runtime: {
     lastError: null,
@@ -34,7 +39,7 @@ window.chrome = {
     }
   },
   storage: {
-    sync: { get: function (defaults, cb) { setTimeout(function () { cb({}); }, 0); } },
+    sync: { get: function (defaults, cb) { setTimeout(function () { cb(STORED); }, 0); } },
     onChanged: { addListener: function () {} }
   }
 };
@@ -121,13 +126,15 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
         });
       });
       var button = document.querySelector('.dt-send-button');
+      var tappable = document.querySelectorAll('[id^="message-content-"][data-dt-tap]').length;
       var embed = document.querySelector('[class*="embedDescription"]');
       var box = document.querySelector('div[role="textbox"]');
       return {
         messages: out,
         embed: embed && embed.textContent.trim(),
         composer: box && box.textContent,
-        composerButton: button ? { lang: button.dataset.dtLang, first: button.parentElement.firstChild === button } : null
+        composerButton: button ? { lang: button.dataset.dtLang, first: button.parentElement.firstChild === button } : null,
+        tappable: tappable
       };
     })()`
   });
@@ -144,6 +151,21 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   console.log('\nChecks:\n');
   const byId = Object.fromEntries(data.messages.map((m) => [m.id, m]));
+
+  if (MODE === 'tap') {
+    console.log('Mode: tap\n');
+    check(data.messages.length === 7, 'all seven messages were seen',
+          `${data.messages.length} found`);
+    check(data.messages.every((m) => !m.marked), 'nothing was translated on its own');
+    check(byId['1001'] && byId['1001'].text === 'ngl this is fire',
+          'the text is exactly as it was posted', byId['1001'] && byId['1001'].text);
+    check(data.tappable === 7, 'every message carries a translate button',
+          `${data.tappable} of 7`);
+    check(!!data.composerButton, 'the composer button is there too');
+    console.log(`\n${failures ? failures + ' check(s) failed' : 'all checks passed'}\n`);
+    ws.close();
+    process.exit(failures ? 1 : 0);
+  }
 
   check(data.messages.length === 7, 'all seven messages were seen',
         `${data.messages.length} found`);
