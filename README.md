@@ -86,14 +86,14 @@ No account, no sign-up, no API key. Nothing to pay for, nothing to set up.
 
 ## Settings
 
-Six, and that is the lot.
+Seven, and that is the lot.
 
 | | |
 |---|---|
 | **On / off** | Or `Alt+T` |
 | **Reading** | Translate everything, or only the message you point at |
 | **From → Into** | Detect each message, or pin the language a channel speaks |
-| **Send as** | What the translate button in the message box sends in |
+| **I write in → Send as** | Your own language, and the one the button sends in |
 | **Where it runs** | Everywhere, one server, or one channel |
 
 Nothing else is a setting, because nothing else has a second right answer.
@@ -183,7 +183,7 @@ dictionary format, how React is survived, known limits.
 ## Privacy
 
 Message text goes to the translation service and nowhere else. No cookies, no
-account, no logging, no analytics. Your six settings stay in your browser.
+account, no logging, no analytics. Your settings stay in your browser.
 
 For nothing to leave your network at all, run LibreTranslate yourself and point
 the extension at it in `src/background.js`:

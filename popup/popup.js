@@ -6,7 +6,7 @@
 
   var $ = function (id) { return document.getElementById(id); };
 
-  var SELECTS = ['source', 'target', 'outgoingTarget'];
+  var SELECTS = ['source', 'target', 'outgoingSource', 'outgoingTarget'];
   var SEGMENTS = ['mode', 'scope'];
 
   var here = { guildId: null, channelId: null };
@@ -156,6 +156,7 @@
     dtLoadSettings().then(function (s) {
       fillLanguages($('source'), s.source, true);
       fillLanguages($('target'), s.target, false);
+      fillLanguages($('outgoingSource'), s.outgoingSource, false);
       fillLanguages($('outgoingTarget'), s.outgoingTarget, false);
       render(s);
       attach(s);

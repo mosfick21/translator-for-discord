@@ -46,10 +46,17 @@
     <section class="card">
       <h2>Messages you send</h2>
 
-      <label class="field">
-        <span class="label">Send as</span>
-        <select id="outgoingTarget"></select>
-      </label>
+      <div class="pair">
+        <label class="pair-side">
+          <span class="pair-label">I write in</span>
+          <select id="outgoingSource"></select>
+        </label>
+        <span class="pair-arrow" aria-hidden="true">→</span>
+        <label class="pair-side">
+          <span class="pair-label">Send as</span>
+          <select id="outgoingTarget"></select>
+        </label>
+      </div>
 
       <p class="note">Enter sends exactly what you typed. The
         <span class="note-icon"></span> button in the message box translates

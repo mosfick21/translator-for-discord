@@ -124,7 +124,12 @@ function dtCommonRatio(text) {
  */
 function dtMostlyEnglish(text) {
   var words = String(text || '').match(/[a-zA-Z]{3,16}/g);
-  if (!words || words.length < 3) return true;
+
+  // Too short to judge. Saying yes here was the wrong way to be wrong: on
+  // "kamon aso" both words are unknown to an English dictionary, so both were
+  // held back and the message came out exactly as it went in. Saying no leaves
+  // the curated list to decide, which is the safe half of the rule.
+  if (!words || words.length < 3) return false;
 
   var known = 0;
   for (var i = 0; i < words.length; i++) {

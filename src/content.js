@@ -548,10 +548,11 @@
     box.dataset.dtBusy = '1';
     if (composerButton) composerButton.dataset.dtState = 'busy';
 
-    // If this turns out to be the user's own language typed in Latin letters,
-    // it is put back into its own script first — otherwise "vai dam koto ekhon"
-    // reads as Vietnamese. The worker decides whether that applies.
-    translate(text, settings.outgoingTarget, null, settings.target)
+    // The language being written is named, not guessed: it tells the worker
+    // both what to translate from and — when this turns out to be Latin letters
+    // standing in for another script — what to put it back into.
+    translate(text, settings.outgoingTarget, settings.outgoingSource,
+              settings.outgoingSource)
       .then(function (res) {
         delete box.dataset.dtBusy;
 

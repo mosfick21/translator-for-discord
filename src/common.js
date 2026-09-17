@@ -1,7 +1,7 @@
 /* Shared constants. Loaded first as a content script, and via <script> in the
    popup, so everything below lives on the shared isolated-world scope.
 
-   There are six settings. Everything else the extension does — keeping internet
+   There are seven settings. Everything else the extension does — keeping internet
    words, relaxing the polite register, putting Latin-typed text back into its
    own script, which translation service to use — has one right answer, so it is
    not a setting. */
@@ -19,7 +19,11 @@ var DT_DEFAULTS = {
   source: 'auto',
   target: 'bn',
 
-  // What the translate button in the message box sends in.
+  // The language you write in, and the one the translate button sends in.
+  // Writing has to be named rather than detected: two words of Banglish look
+  // like nothing at all to a detector, and it is also what tells the extension
+  // which script to put Latin letters back into.
+  outgoingSource: 'bn',
   outgoingTarget: 'en',
 
   // 'everywhere' | 'server' | 'channel', with the anchor captured from the tab
