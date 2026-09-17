@@ -33,14 +33,14 @@
 Messages are rewritten where they sit. Nothing moves.
 
 ```diff
-- gm frens, wen mint?
-+ gm frens, কখন mint?
+- welcome to the server, glad you made it
++ সার্ভারে স্বাগতম, খুশি হলাম তুমি এসেছো
 
-- ngl this is fire
-+ সত্য বলতে এটা দারুন
+- anyone up for a game tonight?
++ আজ রাতে কেউ কি খেলায় আসবে?
 
-- bro this is sus, might be a rugpull
-+ ভাই এটা sus, হতে পারে একটি rugpull
+- thanks a lot, that really helped me
++ অনেক ধন্যবাদ, এটা সত্যিই আমাকে সাহায্য করেছে
 ```
 
 ### Someone writes in a language you did not expect
