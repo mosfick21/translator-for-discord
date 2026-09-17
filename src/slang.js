@@ -176,6 +176,11 @@ var DT_SLANG = {
    through exactly as typed. Anything listed here is also skipped by the slang
    expansion above — keeping the word beats spelling out what it means. */
 var DT_KEEP_WORDS = new Set([
+  // Greetings and address nobody bothers translating. These are here rather
+  // than left to the dictionary because an English dictionary does contain
+  // "gm", "gn" and "wen" as obscure or dialect words, so they read as real.
+  'gm', 'gn', 'frens', 'fren', 'ser', 'anon', 'bruh', 'fam',
+
   // internet culture
   'fomo', 'yolo', 'chill', 'chilling', 'vibe', 'vibes', 'cringe', 'based',
   'sus', 'hype', 'hyped', 'meme', 'memes', 'troll', 'trolling', 'flex',
@@ -224,6 +229,10 @@ function dtProtect(text) {
      yet. */
   masked = masked.replace(/(?<![\p{L}\p{N}_{])[a-zA-Z]{3,16}(?![\p{L}\p{N}_}])/gu, function (word) {
     if (dtIsRealWord(word)) return word;
+    // "brb", "gtg" and "ttyl" are missing from any dictionary too, but they are
+    // shorthand for a whole sentence and want translating, not preserving.
+    // Anything the expansion list knows is left for the translator.
+    if (DT_SLANG[word.toLowerCase()]) return word;
     kept.push(word);
     return '{' + kept.length + '}';
   });
@@ -237,6 +246,75 @@ function dtRestore(text, kept) {
   return String(text || '').replace(/\{(\d+)\}/g, function (whole, n) {
     var word = kept[Number(n) - 1];
     return word === undefined ? whole : word;
+  });
+}
+
+/* These are not idioms, just how people spell. Every backend gets them fixed,
+   including the one that reads slang well, because a respelling is not slang —
+   it is a word the translator simply does not recognise. Left alone, "wen mint?"
+   comes back as "you mint?" or "white mint?" depending on the day. */
+var DT_RESPELL = {
+  'wen': 'when',
+  'wat': 'what',
+  'wut': 'what',
+  'da': 'the',
+  'dat': 'that',
+  'dis': 'this',
+  'tho': 'though',
+  'thru': 'through',
+  'cuz': 'because',
+  'coz': 'because',
+  'bcz': 'because',
+  'bc': 'because',
+  'pls': 'please',
+  'plz': 'please',
+  'thx': 'thanks',
+  'tnx': 'thanks',
+  'ty': 'thank you',
+  'np': 'no problem',
+  'yw': 'you are welcome',
+  'ur': 'your',
+  'urs': 'yours',
+  'u': 'you',
+  'ppl': 'people',
+  'rly': 'really',
+  'srsly': 'seriously',
+  'prob': 'probably',
+  'obv': 'obviously',
+  'ofc': 'of course',
+  'nvm': 'never mind',
+  'tmrw': 'tomorrow',
+  'tmr': 'tomorrow',
+  'gonna': 'going to',
+  'wanna': 'want to',
+  'gotta': 'got to',
+  'kinda': 'kind of',
+  'sorta': 'sort of',
+  'lemme': 'let me',
+  'gimme': 'give me',
+  'dunno': 'do not know',
+  'aint': 'is not',
+  'yall': 'you all',
+  'imma': 'I am going to'
+};
+
+var DT_RESPELL_RE = new RegExp(
+  '(?<![\\p{L}\\p{N}_{])(' +
+    Object.keys(DT_RESPELL).sort(function (a, b) { return b.length - a.length; }).join('|') +
+  ')(?![\\p{L}\\p{N}_}])',
+  'giu'
+);
+
+/** Put chat spellings back into words a translator recognises. */
+function dtRespell(text) {
+  if (!text) return text;
+  return String(text).replace(DT_RESPELL_RE, function (match) {
+    var full = DT_RESPELL[match.toLowerCase()];
+    if (!full) return match;
+    if (match[0] === match[0].toUpperCase() && match[0] !== match[0].toLowerCase()) {
+      return full.charAt(0).toUpperCase() + full.slice(1);
+    }
+    return full;
   });
 }
 

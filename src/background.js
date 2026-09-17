@@ -418,9 +418,10 @@ async function translate(text, target, source, romanizeFrom) {
 
   for (const name of chain) {
     // Each backend gets the form of the text it handles best.
-    const prepared = LITERAL_PROVIDERS.has(name)
-      ? dtExpandSlang(guarded.text)
-      : guarded.text;
+    // Chat spellings are fixed for every backend; the idiom expansion is only
+    // needed by the word-for-word ones.
+    const respelled = dtRespell(guarded.text);
+    const prepared = LITERAL_PROVIDERS.has(name) ? dtExpandSlang(respelled) : respelled;
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       try {

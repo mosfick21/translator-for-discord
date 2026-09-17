@@ -4,271 +4,148 @@
 
 # Translator for Discord
 
-**Read every message in your language. Send yours in theirs.**
+Every message in your language, in place — and yours in theirs.
 
-No account. No API key. Nothing to configure.
+![Manifest](https://img.shields.io/badge/manifest-v3-5865F2)
+![Languages](https://img.shields.io/badge/languages-45-5865F2)
+![Backends](https://img.shields.io/badge/backends-5%20keyless-23a55a)
+![Dictionary](https://img.shields.io/badge/dictionary-364k%20words-23a55a)
+![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 </div>
 
 ---
 
-Discord messages are translated where they sit. Nothing moves, nothing is
-inserted — the words simply arrive in your language, in the same place, in the
-same order.
+## Overview
 
-It works the other way round too: type in your own language, press Enter, and
-the message leaves translated.
+A browser extension that rewrites Discord messages where they sit. Nothing
+moves, nothing is inserted; the words arrive in your language, in the same
+place, in the same order. Typing works the other way — write in your language,
+press Enter, the message leaves translated.
+
+| | |
+|---|---|
+| **Setup** | None. No account, no API key, nothing to paste in |
+| **Backends** | Bing · Google ×2 · MyMemory · self-hosted LibreTranslate |
+| **Languages** | 45 to read and write, 17 typeable in Latin letters |
+| **Scope** | All of Discord, one server, or a single channel |
+| **Untouched** | Bot commands, links, mentions, emoji, code, spoilers |
 
 ```
-      they write                        you read
-  ─────────────────────────────────────────────────────────────
-  gm frens, wen mint?          →   সুপ্রভাত বন্ধু, কখন mint হবে?
-  ngl this is fire             →   সত্য বলতে এটা দারুন
-
-      you type                          they read
-  ─────────────────────────────────────────────────────────────
-  vai dam koto ekhon           →   Brother, how much is the price now?
-  ei project ta scam mone hoy  →   This project seems like a scam
+  ┌──────────────┐          ┌──────────────┐        ┌──────────────┐
+  │ discord.com  │  message │ service      │  text  │ Bing         │
+  │              │─────────▶│ worker       │───────▶│ Google       │
+  │ content.js   │          │              │        │ MyMemory     │
+  │ observes,    │◀─────────│ protect,     │◀───────│ LibreTranslate│
+  │ rewrites     │          │ respell,     │        └──────────────┘
+  └──────────────┘          │ cache, relax │         first to answer
+   mentions, links,         └──────────────┘
+   code left intact          364k-word dictionary
+                             decides what stays
 ```
 
 ## Install
 
-Not on the Chrome Web Store yet, so load it directly — it takes a minute.
+1. **Code → Download ZIP**, then unzip.
+2. Open `chrome://extensions` and turn on **Developer mode**.
+3. **Load unpacked** → choose the folder.
+4. Open Discord, click the icon, pick a language.
 
-1. Download this repository (**Code → Download ZIP**) and unzip it.
-2. Open `chrome://extensions`.
-3. Turn on **Developer mode**, top right.
-4. Click **Load unpacked** and choose the folder.
-5. Open Discord, click the extension icon, pick your language.
+Chrome, Edge, Brave, Opera. Firefox needs one manifest line changed — see
+[Development](#development).
 
-Works in Chrome, Edge, Brave, Opera and any other Chromium browser.
-Firefox needs one line changed — see [Development](#development).
+## Settings
 
-## Using it
+Everything is in the popup and applies immediately.
 
-Everything lives in the popup. Changes apply immediately; there is no save
-button.
-
-### Messages you read
-
-Pick the language you want everything translated into. Forty-five are
-available.
-
-| Option | What it does |
+| Reading | |
 |---|---|
-| **Leave messages alone if they are already in that language** | Skips the ones you can already read |
-| **Translate embeds too** | Bot embeds and link previews as well as messages |
-| **Keep internet words as they are** | *fomo*, *chill*, *wagmi* stay as typed |
-| **Everyday wording** | Relaxes the stiff written register into how people talk |
-| **Show a small marker** | A faint *translated* tag after each message |
+| Target language | 45 available |
+| Skip same language | Leaves messages you can already read |
+| Embeds | Bot embeds and link previews too |
+| Keep internet words | *fomo*, *chill*, *wagmi* stay as typed |
+| Everyday wording | Relaxes the polite written register |
 
-Hold **Alt** and click any message to see what was originally written.
-**Alt+T** turns everything off and on.
-
-### Messages you send
-
-Turn on **Translate what I type before sending** and choose the language to
-send in. Then pick what Enter should do:
-
-- **Translate and send it** — one keystroke, the message goes out translated
-- **Translate, let me check it first** — the box fills with the translation and
-  waits for a second Enter
-
-If you type your language with an English keyboard, turn on **I type my
-language in English letters** and say which language it really is. See
-[Typing in Latin letters](#typing-in-latin-letters).
-
-### Where it runs
-
-| | |
+| Writing | |
 |---|---|
-| **All of Discord** | Every server, every DM |
-| **This server only** | The server open when you chose it |
-| **This channel only** | That one channel |
+| Send in | The language your message goes out in |
+| Latin letters | Banglish, Hinglish, Arabizi typed on an English keyboard |
+| On Enter | Send straight away, or show the translation first |
 
-Translating a server you already understand is just noise, so scope it.
+**Alt+T** toggles. **Alt+click** a message shows the original.
 
-## How it translates
+## How it works
 
-Five services, none of which need an account or a key. If one goes down or
-rate-limits you, the next takes over — translation never simply stops.
+Text nodes are rewritten individually, so mentions, links and formatting survive
+and React does not notice. Discord re-renders constantly; a `MutationObserver`
+catches that and re-applies from cache. The *translated* marker and the
+Alt+click original are CSS pseudo-elements — nothing is inserted into Discord's
+DOM, which React would tear out.
 
-| | |
-|---|---|
-| **Bing** *(default)* | Runs the text through a language model, so casual writing survives |
-| **Google** | Fastest, but word for word. Two endpoints with separate limits |
-| **MyMemory** | Open API, roughly 5,000 words a day |
-| **LibreTranslate** | Fully open source, on a server you run yourself |
+A message broken up by a mention or a link is still sent as one string with
+numbered placeholders, so the translator sees a sentence rather than fragments.
 
-The difference the default makes:
+**What stays untranslated** is decided by a dictionary rather than a list. A
+Latin word absent from 364,000 English words is one the internet invented, and
+one no translator will render well, so it is held back and restored afterwards.
+New words work on first sight. A short curated list covers the other case —
+words that *are* ordinary English but mean something else here: *chill*, *vibe*,
+*mint*, *gas*, *floor*.
 
-```
-  ngl this is fire
-    Bing      সত্য বলতে এটা দারুন          "honestly, this is great"
-    Google    মিথ্যে বলব না এই আগুন        "I won't lie, this fire"
-```
-
-A message broken up by a mention or a link is still sent as a single string,
-with numbered placeholders where the untranslatable parts sit, so the translator
-sees a whole sentence rather than three fragments.
-
-## Typing in Latin letters
-
-Plenty of people write their own language on an English keyboard — Banglish,
-Hinglish, Arabizi. Translators handle it badly: *vai dam koto ekhon* is read as
-Vietnamese and comes back as *"shoulder?"*.
-
-Switch this on and the text is put back into its own script first, which makes
-the language unambiguous:
+**Latin-typed input** is put back into its own script before translating —
+otherwise `vai dam koto ekhon` reads as Vietnamese. English words inside the
+sentence are left alone.
 
 ```
-  vai dam koto ekhon  →  ভাই দাম কতো এখন  →  "Brother, how much is the price now?"
-```
-
-Not every word is converted. English words inside the sentence stay English,
-because that is how people write:
-
-```
-  ei project ta scam mone hoy, admin er sathe kotha bolo
-    →  এই project তা scam মনে হয়, admin এর সাথে কথা বলো
-    →  "This project seems like a scam, talk to the admin."
-```
-
-Seventeen languages can be typed this way: Bengali, Hindi, Urdu, Tamil, Telugu,
-Malayalam, Kannada, Marathi, Gujarati, Punjabi, Nepali, Sinhala, Arabic,
-Persian, Hebrew, Russian and Greek.
-
-## Words that stay as they are
-
-Some words have no translation worth having. Every language just says *fomo*,
-and a translator that insists on rendering it drops *"the fear of missing out"*
-into the middle of a chat message.
-
-```
-  fomo is real rn, everyone aping in   →  fomo এখন সত্যি, সবাই নকল করছে
-  gas is insane, floor went to 2 ETH   →  gas পাগল, floor ২ ETH তে চলে গেল
-  bro this is sus, might be a rugpull  →  ভাই এটা sus, হতে পারে একটি rugpull
-```
-
-This is not a fixed list of words to keep up with. The extension carries a
-dictionary of 364,000 English words, and anything the internet invented is
-simply not in it — so a Latin word the dictionary does not know is held back
-automatically. Words nobody has ever added work on their first appearance:
-
-```
-  this is so skibidi ngl     →  এটি খুব skibidi ngl
-  bro is delulu fr           →  ভাই delulu সত্যি
-```
-
-A short curated list covers the other case — words that *are* ordinary English
-but mean something else here: *chill*, *vibe*, *sus*, *mint*, *gas*, *floor*.
-
-## Everyday wording
-
-Translation engines answer in the polite written register, which reads wrong in
-a chat window. Nobody types *"আপনি কখন মিন্ট করবেন?"*. The result is relaxed
-into ordinary speech: *"তুমি কখন mint করবে?"*.
-
-This is the one part that cannot treat every language alike, because politeness
-is built differently in each. Rules ship for the languages where a mechanical
-change is reliably correct — Bengali, Hindi, Turkish, Indonesian and Malay mark
-politeness in a pronoun or a regular suffix. Spanish, French and German
-conjugate the verb to match, so swapping the pronoun alone would produce
-something no speaker would write; those pass through untouched.
-
-## Never translated
-
-Bot commands survive byte for byte, incoming and outgoing — `/ban`, `!verify`,
-`?help`, `$balance` and the other prefixes bots use. So do links, mentions,
-channel references, custom emoji, inline code, fenced code blocks, spoilers,
-timestamps, and anything containing a digit.
-
-## Privacy
-
-Message text goes to the translation service you selected, and nowhere else.
-No cookies are attached, no account is involved, nothing is logged, and no
-analytics of any kind are collected. Your settings live in your own browser.
-
-To keep message text off the network entirely, run LibreTranslate yourself and
-point the extension at it:
-
-```bash
-docker run -p 5000:5000 libretranslate/libretranslate
+  gm frens, wen mint?  →  gm frens, কখন mint?
+  vai dam koto ekhon   →  Brother, how much is the price now?
 ```
 
 ## Development
 
 ```
 manifest.json           MV3 manifest
-popup/                  settings panel, styled with Discord's own palette
-src/common.js           shared defaults and the language list
-src/content.js          watches the message list, rewrites text, drives the composer
-src/background.js       every network call, the provider chain, the cache
-src/slang.js            shorthand expansion and the words held back from translation
-src/dictionary.js       Bloom filter lookup over ordinary English
-src/dictionary.bin      364k words in 356 KB, built by tools/
-src/tone.js             polite register relaxed into everyday speech
-test/                   mock Discord page and a DevTools-driven DOM test
-tools/                  rebuilds the dictionary from its source list
-assets/                 icon source and the script that cuts it to size
+popup/                  settings panel, Discord's own palette
+src/content.js          observes the message list, rewrites text, drives the composer
+src/background.js       network, provider chain, cache
+src/slang.js            respellings, expansions, words held back
+src/dictionary.js       Bloom filter lookup
+src/dictionary.bin      364k words in 356 KB
+src/tone.js             polite register relaxed into speech
+test/                   mock Discord page, DevTools-driven DOM test
+tools/                  rebuilds the dictionary
+assets/                 artwork and the script that cuts it to size
 ```
-
-Messages are translated by rewriting individual text nodes rather than replacing
-message elements, which keeps mentions, links and formatting intact and keeps
-React from noticing. Discord re-renders constantly; a `MutationObserver` catches
-that and re-applies from cache, so nothing flickers back.
-
-The *translated* marker and the Alt+click original are drawn with CSS
-pseudo-elements. Nothing is inserted into Discord's DOM — React would tear it
-out and could crash trying.
-
-### Tests
 
 ```bash
 npm run serve                                              # mock Discord page
 chrome --headless=new --remote-debugging-port=9222 about:blank
-npm test
+npm test                                                   # 8 DOM checks
+npm run build:dictionary                                   # rebuild the filter
 ```
 
-`test/mock-discord.html` reproduces Discord's message markup — the same element
-ids, the same mix of mentions, links, code and emoji. `test/run-dom-test.js`
-drives a real Chrome over the DevTools protocol, injects the content script with
-translation stubbed, and checks what actually changed: messages rewritten in
-place, a message arriving after load picked up by the observer, and mentions,
-links and code untouched.
+The DOM test drives a real Chrome over the DevTools protocol with translation
+stubbed, and asserts what changed: messages rewritten in place, a late message
+caught by the observer, mentions and links and code untouched.
 
-### Rebuilding the dictionary
-
-```bash
-node tools/build-dictionary.js
-```
-
-Fetches [dwyl/english-words](https://github.com/dwyl/english-words) and rebuilds
-`src/dictionary.bin`. A Bloom filter is used because the answer only has to be
-safe in one direction: a real word is never missed, so nothing genuine is
-wrongly held back. About two per cent of invented words look real and get
-translated anyway.
-
-### Firefox
-
-Replace the service worker declaration in `manifest.json`:
+**Firefox** — replace the service worker declaration:
 
 ```json
 "background": { "scripts": ["src/background.js"] }
 ```
 
-Then load it through `about:debugging` → **This Firefox** → **Load Temporary
-Add-on**.
+**Extending** — languages in `DT_LANGUAGES`, kept words in `DT_KEEP_WORDS`, tone
+rules in `DT_TONE`, backends in `PROVIDERS`.
 
-### Adding things
+## Privacy
 
-- **A language** — `DT_LANGUAGES` in `src/common.js`
-- **A word that should stay untranslated** — `DT_KEEP_WORDS` in `src/slang.js`,
-  only needed for words that are also ordinary English
-- **Tone rules for a language** — `DT_TONE` in `src/tone.js`; the bar is that the
-  change must never be wrong, not that it catches everything
-- **A translation backend** — a function returning `{ text, detected }`,
-  registered in `PROVIDERS` in `src/background.js`
+Message text goes to the selected translation service and nowhere else. No
+cookies, no account, no logging, no analytics. Settings stay in your browser.
+For nothing to leave your network at all, run LibreTranslate yourself:
+
+```bash
+docker run -p 5000:5000 libretranslate/libretranslate
+```
 
 ## License
 
